@@ -1,0 +1,7 @@
+{
+	"sketch": "esp32-datalogger.ino",
+    "board": "esp32:esp32:nodemcu-32s",
+    "port": "COM4",
+    "programmer": "esptool",
+    "output": "../output"
+}

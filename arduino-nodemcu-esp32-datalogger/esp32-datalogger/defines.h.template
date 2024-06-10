@@ -1,0 +1,20 @@
+#ifndef DEFINES_H
+#define DEFINES_H
+
+// wifi access
+#define WIFI_SSID "REPLACE_WITH_YOUR_SSID"
+#define WIFI_PASSWORD "REPLACE_WITH_YOUR_PASSWORD"
+
+// google project ID
+#define PROJECT_ID "REPLACE_WITH_YOUR_PROJECT_ID"
+
+// service account's client email
+#define CLIENT_EMAIL "REPLACE_WITH_YOUR_CLIENT_EMAIL"
+
+// service account's private key
+const char PRIVATE_KEY[] PROGMEM = // "-----BEGIN PRIVATE KEY-----\ REPLACE_WITH_YOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n";
+
+// spreadsheet ID where you'll publish the data
+const char spreadsheetId[] = "YOUR_SPREADSHEET_ID";
+
+#endif /* DEFINES_H */
