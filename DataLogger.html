@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+		integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+	<base target="_top">
+	<!-- include styling file here (css) -->
+	<?!= include('stylesheet'); ?>
+	<!-- include javascript file here -->
+	<?!= include('javascript'); ?>
+</head>
+
+<body>
+	<h1>ESP32 Datalogger</h1>
+	<form>
+		<center>
+			<table id="temperature-info" style="color:#059e8a;">
+				<tr>
+					<td colspan="2" style="font-size: 15px; padding-bottom: 15px;">
+						<center id="date-last-measurement">
+							?
+						</center>
+					</td>
+					<td id="date-start-measurement" class="left" style="font-size:15px; padding-bottom:15px;">
+						?
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<i class="fas fa-thermometer-half fa-1x" aria-hidden="true"></i>
+						<span class="dht-labels">Temperature</span>
+					</td>
+					<td>
+						<span id="temperature">?</span>
+						<span>&deg;C</span>
+					</td>
+					<td>
+						<table id="temperature-stats">
+							<tr>
+								<td style="font-size: 15px;">avg.</td>
+								<td class="right" style="font-size: 15px;">
+									<span id="temperature-avg">?</span>
+									<span>&deg;c</span>
+								</td>
+							</tr>
+							<tr>
+								<td style="font-size: 15px;">max</td>
+								<td class="right" style="font-size: 15px;">
+									<span id="temperature-max">?</span>
+									<span>&deg;c</span>
+								</td>
+							</tr>
+							<tr>
+								<td style="font-size: 15px;">min</td>
+								<td class="right" style="font-size: 15px;">
+									<span id="temperature-min">?</span>
+									<span>&deg;c</span>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<div style="width: auto; height: auto;">
+				<canvas id="lineChartTemperature" class="chartjs-render-monitor"></canvas>
+			</div>
+
+			<h1 id="feedback">retrieving data ...</h1>
+			<span id="loader"></span>
+
+			<table id="humidity-info" style="color:#00add6;">
+				<tr>
+					<td colspan="3" style="font-size: 15px; padding-bottom: 15px;">
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<i class="fas fa-tint fa-1x"></i>
+						<span class="dht-labels">Humidity</span>
+					</td>
+					<td>
+						<span id="humidity">?</span>
+						<span>&percnt;</span>
+					</td>
+					<td>
+						<table id="humidity-stats">
+							<tr>
+								<td style="font-size: 15px;">avg.</td>
+								<td class="right" style="font-size: 15px;">
+									<span id="humidity-avg">?</span>
+									<span>&percnt;</span>
+								</td>
+							</tr>
+							<tr>
+								<td style="font-size: 15px;">max</td>
+								<td class="right" style="font-size: 15px;">
+									<span id="humidity-max">?</span>
+									<span>&percnt;</span>
+								</td>
+							</tr>
+							<tr>
+								<td style="font-size: 15px;">min</td>
+								<td class="right" style="font-size: 15px;">
+									<span id="humidity-min">?</span>
+									<span>&percnt;</span>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+			<div style="width: auto; height: auto;">
+				<canvas id="lineChartHumidity" class="chartjs-render-monitor"></canvas>
+			</div>
+		</center>
+		<div id="info" style="color:#808080"></div>
+	</form>
+
+	<!-- hidden element to create the Rest page link -->
+	<?var url = getUrl();?><input type="hidden" value="<?= url ?>" id="url" />
+
+</body>
+
+</html>
+
+<!-- external scripts shall be put at the end of HTML (helps to responsivness of the page) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+	integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.js"
+	integrity="sha512-Lii3WMtgA0C0qmmkdCpsG0Gjr6M0ajRyQRQSbTF6BsrVh/nhZdHpVZ76iMIPvQwz1eoXC3DmAg9K51qT5/dEVg=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.js"
+	integrity="sha512-IOZHspo7CAW8RK/m/1Zm2V0yPh3gJivW2GRGL0BoejvtmxxyDEznc4q4dhWlUvxl5vWcNpJcg9YELGKvZ1u5jw=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- these previous versions work too
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.js" integrity="sha512-b3xr4frvDIeyC3gqR1/iOi6T+m3pLlQyXNuvn5FiRrrKiMUJK3du2QqZbCywH6JxS5EOfW0DY0M6WwdXFbCBLQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.js" integrity="sha512-IOZHspo7CAW8RK/m/1Zm2V0yPh3gJivW2GRGL0BoejvtmxxyDEznc4q4dhWlUvxl5vWcNpJcg9YELGKvZ1u5jw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+-->
+
+<script>
+	/* TODO: why ???
+	setInterval(function() {
+	  // ok but it opens another tab
+	  var url = document.getElementById("url").value + "?page=DataLogger";
+	  console.log(url);
+	  window.open(url, "_top");
+	}, 10_000); // in ms
+	*/
+
+	$(document).ready(function () {
+		/// execute script when the page is loaded
+		getStatistics();
+		getSensorValues();
+	});
+
+	/**
+	 * Get request for statistics
+	 */
+	function getStatistics() {
+		/**
+		 * Request server to get sensor values
+		 * Handlers onSucces/onFailure provided
+		 */
+		google.script.run
+			.withSuccessHandler(onSuccessStatistics)
+			.withFailureHandler(onFailure)
+			.getStatisticValuesFromGoogleSheet();
+	}
+
+	/**
+	 * Get request for temperatures and humidities
+	 */
+	function getSensorValues() {
+
+		/**
+		 * Request server to get sensor values
+		 * Handlers onSucces/onFailure provided
+		 */
+		google.script.run
+			.withSuccessHandler(onSuccess)
+			.withFailureHandler(onFailure)
+			.getSensorValuesFromGoogleSheet();
+	};
+
+</script>

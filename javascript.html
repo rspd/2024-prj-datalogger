@@ -1,0 +1,185 @@
+<script>
+	/**
+	 * On success handler
+	 * Creates a line chart in case server executes
+	 * getSensorValues() successfully
+	 */
+	function onSuccess(ar) {
+		// just for debug purposes
+		//console.log(ar);
+
+		var lineChartTemperatureValues = [];
+		var lineChartHumidityValues = [];
+		var lineChartLabels = [];
+		var chartColors = ['#059e8a', '#00add6'];
+
+		let shouldSkip = false;
+		ar.forEach(function (item, index) {
+			if (shouldSkip) {
+				return;
+			}
+			if ((item[0] == "") || (item[1] == "")) {
+				shouldSkip = true;
+				return;
+			}
+			var myDate = formattedDateTime(new Date(item[0] * 1000));
+			lineChartLabels.push(myDate); // or lineChartLabels.push(myDate.toGMTString());
+			lineChartTemperatureValues.push(item[1]);
+			lineChartHumidityValues.push(item[2]);
+		});
+
+		// just for debug purposes
+		//console.log("lineChartTemperatureValues= " + lineChartTemperatureValues)
+
+		// the line chart data
+		var lineChartTemperatureData = {
+			labels: lineChartLabels,
+			datasets: [{
+				label: 'Temperature',
+				data: lineChartTemperatureValues,
+				fill: false,
+				borderColor: chartColors[0],
+				tension: 0.1,
+				showLine: false,
+			}],
+		};
+
+		var chartOptions = {
+			plugins: {
+				legend: {
+					display: false
+				}
+			},
+			scales: {
+				x: {
+					ticks: {
+						display: true
+					},
+					display: false
+				},
+				y: {
+					beginAtZero: true,
+					display: true,
+				}
+			}
+		};
+
+		// grab the line chart context
+		var ctx = document.getElementById("lineChartTemperature").getContext("2d");
+
+		// render/show/create the line chart to be shown now
+		var lineChartTemperature = new Chart(ctx, {
+			type: 'line',
+			data: lineChartTemperatureData,
+			options: chartOptions,
+		});
+
+		// the line chart data
+		var lineChartHumidityData = {
+			labels: lineChartLabels,
+			datasets: [{
+				label: 'Humidity',
+				data: lineChartHumidityValues,
+				fill: false,
+				borderColor: chartColors[1],
+				tension: 0.1,
+				showLine: false,
+			}],
+		};
+
+		// grab the line chart context
+		ctx = document.getElementById("lineChartHumidity").getContext("2d");
+
+		// render/show/create the line chart to be shown now
+		var lineChartHumidity = new Chart(ctx, {
+			type: 'line',
+			data: lineChartHumidityData,
+			options: chartOptions,
+		});
+
+		var nrOfSamples = lineChartLabels.length;
+		document.getElementById("info").innerText = "Total of " + nrOfSamples + " measurements during the period " + lineChartLabels[0] + " - " + lineChartLabels[nrOfSamples - 1];
+
+		document.getElementById("temperature").innerText = lineChartTemperatureValues[lineChartTemperatureValues.length - 1];
+		document.getElementById("humidity").innerText = lineChartHumidityValues[lineChartHumidityValues.length - 1];
+
+		document.getElementById("date-start-measurement").innerText = "since " + formattedDate(new Date(lineChartLabels[0]));
+		document.getElementById("date-last-measurement").innerText = lineChartLabels[lineChartLabels.length - 1]
+
+
+		// clear user feedback
+		document.getElementById("feedback").innerText = "";
+		document.getElementById("loader").style.display = "none";
+		document.getElementById("temperature-info").style.display = "block";
+		document.getElementById("temperature-stats").style.display = "block";
+		document.getElementById("humidity-info").style.display = "block";
+		document.getElementById("humidity-stats").style.display = "block";
+
+	};
+
+	/**
+	 * Formatted date & time (dd/mm/yyyy, hh:mm)
+	 */
+	function formattedDateTime(localDate) {
+		const yyyy = localDate.getFullYear();
+		let mm = localDate.getMonth() + 1; // Months start at 0!
+		let dd = localDate.getDate();
+		if (dd < 10) dd = '0' + dd;
+		if (mm < 10) mm = '0' + mm;
+		const hours = localDate.getHours();
+		const minutes = localDate.getMinutes();
+
+		return dd + '/' + mm + '/' + yyyy + ', ' + hours + ':' + minutes;
+	}
+
+	/**
+	 * Formatted date (dd/mm/yyyy)
+	 */
+	function formattedDate(localDate) {
+		const yyyy = localDate.getFullYear();
+		let mm = localDate.getMonth() + 1; // Months start at 0!
+		let dd = localDate.getDate();
+		if (dd < 10) dd = '0' + dd;
+		if (mm < 10) mm = '0' + mm;
+
+		return dd + '/' + mm + '/' + yyyy;
+	}
+
+	/**
+	 * Execute on server failure
+	 */
+	function onFailure() {
+		document.getElementById('feedback').innerText = "Server not responding, please try later again.";
+		document.getElementById("loader").style.display = "none";
+		localStorage.setItem("visited", "false");
+	}
+
+	/**
+	 * On success handler
+	 * Show statistic values in case server executes
+	 * getStatistics() successfully
+	 */
+	function onSuccessStatistics(ar) {
+		// just for debug purposes
+		//console.log(ar);
+
+		let shouldSkip = false;
+		ar.forEach(function (item, index) {
+			if (shouldSkip) {
+				return;
+			}
+			if ((item[0] == "") || (item[1] == "") || (item[2] == "") ||
+				(item[3] == "") || (item[4] == "") || (item[5] == "")) {
+				shouldSkip = true;
+				return;
+			}
+			document.getElementById("temperature-avg").innerText = parseFloat(item[0]).toFixed(1);
+			document.getElementById("temperature-max").innerText = parseFloat(item[1]).toFixed(1);
+			document.getElementById("temperature-min").innerText = parseFloat(item[2]).toFixed(1);
+			document.getElementById("humidity-avg").innerText = parseFloat(item[3]).toFixed(1);
+			document.getElementById("humidity-max").innerText = parseFloat(item[4]).toFixed(1);
+			document.getElementById("humidity-min").innerText = parseFloat(item[5]).toFixed(1);
+		});
+	}
+
+</script>
