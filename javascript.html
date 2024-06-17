@@ -114,12 +114,12 @@
 		document.getElementById("temperature-stats").style.display = "block";
 		document.getElementById("humidity-info").style.display = "block";
 		document.getElementById("humidity-stats").style.display = "block";
-
+		document.getElementById("info-version").style.display = "block";
 	};
 
 	/**
-	 * Formatted date & time (dd/mm/yyyy, hh:mm)
-	 */
+	* Formatted date & time (yyyy-mm-dd, hh:mm)
+	*/
 	function formattedDateTime(localDate) {
 		const yyyy = localDate.getFullYear();
 		let mm = localDate.getMonth() + 1; // Months start at 0!
@@ -127,14 +127,15 @@
 		if (dd < 10) dd = '0' + dd;
 		if (mm < 10) mm = '0' + mm;
 		const hours = localDate.getHours();
-		const minutes = localDate.getMinutes();
+		let minutes = localDate.getMinutes();
+		if (minutes < 10) minutes = '0' + minutes;
 
-		return dd + '/' + mm + '/' + yyyy + ', ' + hours + ':' + minutes;
+		return yyyy + '-' + mm + '-' + dd + ', ' + hours + ':' + minutes;
 	}
 
 	/**
-	 * Formatted date (dd/mm/yyyy)
-	 */
+	* Formatted date (yyyy-mm-dd)
+	*/
 	function formattedDate(localDate) {
 		const yyyy = localDate.getFullYear();
 		let mm = localDate.getMonth() + 1; // Months start at 0!
@@ -142,7 +143,7 @@
 		if (dd < 10) dd = '0' + dd;
 		if (mm < 10) mm = '0' + mm;
 
-		return dd + '/' + mm + '/' + yyyy;
+		return yyyy + '-' + mm + '-' + dd;
 	}
 
 	/**
