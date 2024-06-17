@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
@@ -11,7 +10,6 @@
 	<!-- include javascript file here -->
 	<?!= include('javascript'); ?>
 </head>
-
 <body>
 	<h1>ESP32 Datalogger</h1>
 	<form>
@@ -117,7 +115,7 @@
 		</center>
 		<div class="info">
 			<div id="info"></div>
-			<div id="info-version">2024 - v1.00</div>
+			<div id="info-version">2024 - v1.01</div>
 		</div>
 	</form>
 
@@ -125,14 +123,20 @@
 	<?var url = getUrl();?><input type="hidden" value="<?= url ?>" id="url" />
 
 </body>
-
 </html>
 
 <!-- external scripts shall be put at the end of HTML (helps to responsivness of the page) -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js" integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- not used
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.js" integrity="sha512-Lii3WMtgA0C0qmmkdCpsG0Gjr6M0ajRyQRQSbTF6BsrVh/nhZdHpVZ76iMIPvQwz1eoXC3DmAg9K51qT5/dEVg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.js" integrity="sha512-IOZHspo7CAW8RK/m/1Zm2V0yPh3gJivW2GRGL0BoejvtmxxyDEznc4q4dhWlUvxl5vWcNpJcg9YELGKvZ1u5jw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+-->
 
 <!-- these previous versions work too
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -144,14 +148,14 @@
 <script>
 	/* TODO: why ???
 	setInterval(function() {
-	  // ok but it opens another tab
-	  var url = document.getElementById("url").value + "?page=DataLogger";
-	  console.log(url);
-	  window.open(url, "_top");
+		// ok but it opens another tab
+		var url = document.getElementById("url").value + "?page=DataLogger";
+		console.log(url);
+		window.open(url, "_top");
 	}, 10_000); // in ms
 	*/
 
-	$(document).ready(function () {
+	$( document ).ready(function() {
 		/// execute script when the page is loaded
 		getStatistics();
 		getSensorValues();
