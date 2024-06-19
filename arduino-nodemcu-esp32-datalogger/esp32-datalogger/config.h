@@ -21,6 +21,12 @@
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
 
 ///////////////////////////////////////////////////////////////////////////////
+/// ESP32 wake up configuration
 
+#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  300         /* Time ESP32 will go to sleep (in seconds) */
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 #endif /* CONFIG_H */

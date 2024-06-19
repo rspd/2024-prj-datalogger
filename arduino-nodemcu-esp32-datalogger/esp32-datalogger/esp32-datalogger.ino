@@ -46,13 +46,16 @@ static unsigned long getTime();
 // append sensor values to google sheet
 static void appendSensorValuesToGSheet(float temperature, float humidity);
 
+// method to print the reason by which ESP32 has been awaken from sleep
+static void print_wakeup_reason();
+
 enum Constants
 {
 	ONE_SECOND_DELAY = 1000,
 	TOKEN_REFRESH_SECONDS_TIMEOUT = 10 * 60,
 	IDLE_SECONDS_BEFORE_NEXT_MEAS = 5,
 	IDLE_MILIS_BEFORE_NEXT_MEAS = IDLE_SECONDS_BEFORE_NEXT_MEAS * 60 * 1000,
-	RECONNECT_WIFI_TIMES_MAX = TOKEN_REFRESH_SECONDS_TIMEOUT / IDLE_SECONDS_BEFORE_NEXT_MEAS,
+	RECONNECT_WIFI_TIMES_MAX = 10,
 };
 
 typedef enum
@@ -66,6 +69,7 @@ typedef enum
 	STATE_APPEND_GSHEET = 6,
 	STATE_NO_WIFI = 7,
 	STATE_RECONNECT_WIFI = 8,
+	STATE_ENTER_DEEP_SLEEP = 9,
 	STATE_ERROR
 } state_t;
 
@@ -88,7 +92,6 @@ float temperature = 0.0;
 // wifi disconnected
 bool wifiDisconnected = true;
 
-
 // ntp server to request epoch time
 const char *ntpServer = "pool.ntp.org";
 
@@ -107,7 +110,15 @@ void setup()
 	Serial.println();
 	Serial.println();
 
-	// Configure time
+	// print the wakeup reason for ESP32
+	print_wakeup_reason();
+
+	// configure the wake up source and set time to sleep
+	esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+	Serial.print(millis());
+	Serial.println(" setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) + " seconds");
+
+	// configure time
 	configTime(0, 0, ntpServer);
 
 	// next state
@@ -169,7 +180,8 @@ void loop()
 		state = STATE_APPEND_GSHEET;
 		if (wifiConnectionLost())
 		{
-			if (!wifiDisconnected) {
+			if (!wifiDisconnected)
+			{
 				wifiDisconnected = true;
 				++wifiDisconnectionCnt;
 			}
@@ -184,25 +196,33 @@ void loop()
 		}
 		appendSensorValuesToGSheet(temperature, humidity);
 
-		GSheet.refreshToken();
+		//GSheet.refreshToken();
 
-		state = STATE_IDLE;
+		state = STATE_ENTER_DEEP_SLEEP;
 		break;
 
 	case STATE_RECONNECT_WIFI:
-		lastTime = millis();
-		reconnectWiFi();
-		++reconnectWifiCnt;
-		state = (reconnectWifiCnt < RECONNECT_WIFI_TIMES_MAX) ? STATE_IDLE : STATE_CONNECT_WIFI;
+		do
+		{
+			reconnectWiFi();
+			++reconnectWifiCnt;
+		} while ((WiFi.status() != WL_CONNECTED) && (reconnectWifiCnt < RECONNECT_WIFI_TIMES_MAX));
+
+		state = (reconnectWifiCnt < RECONNECT_WIFI_TIMES_MAX) ? STATE_READ_SENSOR : STATE_ERROR;
+		break;
+
+	case STATE_ENTER_DEEP_SLEEP:
+		Serial.print(millis());
+		Serial.println(" going to sleep now");
+		Serial.flush();
+		esp_deep_sleep_start();
 		break;
 
 	case STATE_ERROR:
 	default:
-		if (readSensorNow)
-		{
-			lastTime = millis();
-			state = STATE_POWER_ON;
-		}
+		Serial.print(millis());
+		Serial.println(" error state");
+		state = STATE_ENTER_DEEP_SLEEP;
 		break;
 	}
 }
@@ -257,6 +277,7 @@ static void reconnectWiFi()
 	WiFi.disconnect();
 	delay(ONE_SECOND_DELAY);
 	WiFi.reconnect();
+	delay(ONE_SECOND_DELAY);
 }
 
 static void initGSheet()
@@ -332,10 +353,16 @@ static void printStatus()
 	Serial.println(wifiDisconnectionCnt);
 
 	Serial.print("GSheet counters: ");
-	Serial.print(gsheetOkCnt); Serial.print("/"); Serial.print(gsheetErrCnt); Serial.println(" [ok/err]");
+	Serial.print(gsheetOkCnt);
+	Serial.print("/");
+	Serial.print(gsheetErrCnt);
+	Serial.println(" [ok/err]");
 
 	Serial.print("Token counters: ");
-	Serial.print(tokenStatusCallbackOkCnt); Serial.print("/"); Serial.print(tokenStatusCallbackErrCnt); Serial.println(" [ok/err]");
+	Serial.print(tokenStatusCallbackOkCnt);
+	Serial.print("/");
+	Serial.print(tokenStatusCallbackErrCnt);
+	Serial.println(" [ok/err]");
 }
 
 static unsigned long getTime()
@@ -384,4 +411,35 @@ static void appendSensorValuesToGSheet(float temperature, float humidity)
 	}
 	Serial.println();
 	Serial.println(ESP.getFreeHeap());
+}
+
+static void print_wakeup_reason()
+{
+	esp_sleep_wakeup_cause_t wakeup_reason;
+
+	wakeup_reason = esp_sleep_get_wakeup_cause();
+
+	Serial.print(millis());
+
+	switch (wakeup_reason)
+	{
+	case ESP_SLEEP_WAKEUP_EXT0:
+		Serial.println(" wakeup caused by external signal using RTC_IO");
+		break;
+	case ESP_SLEEP_WAKEUP_EXT1:
+		Serial.println(" wakeup caused by external signal using RTC_CNTL");
+		break;
+	case ESP_SLEEP_WAKEUP_TIMER:
+		Serial.println(" wakeup caused by timer");
+		break;
+	case ESP_SLEEP_WAKEUP_TOUCHPAD:
+		Serial.println(" wakeup caused by touchpad");
+		break;
+	case ESP_SLEEP_WAKEUP_ULP:
+		Serial.println(" wakeup caused by ULP program");
+		break;
+	default:
+		Serial.printf(" wakeup was not caused by deep sleep: %d\n", wakeup_reason);
+		break;
+	}
 }
