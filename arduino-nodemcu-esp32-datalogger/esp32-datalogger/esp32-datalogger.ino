@@ -1,4 +1,20 @@
 /**
+ * ESP32 Datalogger
+ *
+ * Used library            Version Pfad
+ * WiFi                    2.0.0   C:\Users\<user>\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\WiFi
+ * DHT sensor library      1.4.6   C:\Users\<user>\Documents\Arduino\libraries\DHT_sensor_library
+ * ESP-Google-Sheet-Client 1.4.4   C:\Users\<user>\Documents\Arduino\libraries\ESP-Google-Sheet-Client
+ * SPIFFS                  2.0.0   C:\Users\<user>\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\SPIFFS
+ * SD                      2.0.0   C:\Users\<user>\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\SD
+ * SPI                     2.0.0   C:\Users\<user>\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\SPI
+ * Adafruit Unified Sensor 1.1.14  C:\Users\<user>\Documents\Arduino\libraries\Adafruit_Unified_Sensor
+ * FS                      2.0.0   C:\Users\<user>\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\FS
+ *
+ * Board Packages Used:
+ * Arduino ESP32 Boards    2.0.13  NodeMCU-32S
+ * ESP32 by Espressif      2.0.17  ..Arduino15\packages\esp32\hardware\esp32\2.0.17\...
+ *
  * Some important links:
  * ESP32 Datalogging to Google Sheets (using Google Service Account)
  * - https://RandomNerdTutorials.com/esp32-datalogging-google-sheets/
