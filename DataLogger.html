@@ -115,7 +115,7 @@
 		</center>
 		<div class="info">
 			<div id="info"></div>
-			<div id="info-version">2024 - v1.01</div>
+			<div id="info-version">2024 - v1.02</div>
 		</div>
 	</form>
 
@@ -130,6 +130,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js" integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
@@ -162,13 +164,13 @@
 	});
 
 	/**
-	 * Get request for statistics
-	 */
+	* Get request for statistics
+	*/
 	function getStatistics() {
 		/**
-		 * Request server to get sensor values
-		 * Handlers onSucces/onFailure provided
-		 */
+		* Request server to get sensor values
+		* Handlers onSucces/onFailure provided
+		*/
 		google.script.run
 			.withSuccessHandler(onSuccessStatistics)
 			.withFailureHandler(onFailure)
@@ -176,14 +178,14 @@
 	}
 
 	/**
-	 * Get request for temperatures and humidities
-	 */
+	* Get request for temperatures and humidities
+	*/
 	function getSensorValues() {
 
 		/**
-		 * Request server to get sensor values
-		 * Handlers onSucces/onFailure provided
-		 */
+		* Request server to get sensor values
+		* Handlers onSucces/onFailure provided
+		*/
 		google.script.run
 			.withSuccessHandler(onSuccess)
 			.withFailureHandler(onFailure)
