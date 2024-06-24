@@ -13,8 +13,10 @@
 		var lineChartLabels = [];
 		var chartColors = ['#059e8a', '#00add6'];
 
-		let shouldSkip = false;
+		//let shouldSkip = false;
 		ar.forEach(function (item, index) {
+			/*
+			The code caused a problem when the temperature was set to 0.0
 			if (shouldSkip) {
 				return;
 			}
@@ -22,6 +24,7 @@
 				shouldSkip = true;
 				return;
 			}
+			*/
 			var myDate = formattedDateTime(new Date(item[0] * 1000));
 			lineChartLabels.push(myDate); // or lineChartLabels.push(myDate.toGMTString());
 			lineChartTemperatureValues.push(item[1]);
@@ -175,8 +178,10 @@
 		// just for debug purposes
 		//console.log(ar);
 
-		let shouldSkip = false;
+		//let shouldSkip = false;
 		ar.forEach(function (item, index) {
+			/*
+			The code caused a problem when the temperature was set to 0.0
 			if (shouldSkip) {
 				return;
 			}
@@ -185,6 +190,7 @@
 				shouldSkip = true;
 				return;
 			}
+			*/
 			document.getElementById("temperature-avg").innerText = parseFloat(item[0]).toFixed(1);
 			document.getElementById("temperature-max").innerText = parseFloat(item[1]).toFixed(1);
 			document.getElementById("temperature-min").innerText = parseFloat(item[2]).toFixed(1);
