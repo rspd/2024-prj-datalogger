@@ -18,6 +18,8 @@
  * - https://stackoverflow.com/questions/17910764/how-to-allow-others-to-access-a-web-app-made-from-a-google-apps-script
  * Arduino Google Sheet Client Library for Arduino devices
  * - https://github.com/mobizt/ESP-Google-Sheet-Client
+ * How to show decimals with 0 in chartJS
+ * - https://stackoverflow.com/questions/75864092/how-to-show-decimals-with-0-in-chartjs
  *
  * Development URL
  * - https://script.google.com/macros/s/AKfycbz7K-RbqsqssCXGNbSldVfRJzzNM4AyqQZ-RvBWp0Y/dev?page=DataLogger

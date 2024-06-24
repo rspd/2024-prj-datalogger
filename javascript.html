@@ -62,6 +62,14 @@
 						},
 						mode: 'x',
 					}
+				},
+				tooltip: {
+					callbacks: {
+						label: function(context) {
+							// this guarantees that 1 decimal place is shown -> e.g. '22.0'
+							return context.parsed.y.toFixed(1);
+						}
+					}
 				}
 			},
 			scales: {
