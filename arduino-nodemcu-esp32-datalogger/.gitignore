@@ -1,4 +1,5 @@
 /esp32-datalogger/defines.h
 /output
 /keys
+/bkp
 *.7z
