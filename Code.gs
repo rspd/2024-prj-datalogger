@@ -98,7 +98,7 @@ function getSensorValuesFromGoogleSheet() {
 	var ws = ss.getSheetByName("Sheet1");
 	var getLastRow = ws.getLastRow();
 
-	return ws.getRange(2, 1, getLastRow - 1, 3).getValues();
+	return ws.getRange(2, 1, getLastRow - 1, 5).getValues();
 }
 
 /**
@@ -111,5 +111,5 @@ function getStatisticValuesFromGoogleSheet() {
 	var ss = SpreadsheetApp.openByUrl(url);
 	var ws = ss.getSheetByName("Sheet2");
 
-	return ws.getRange(3, 1, 1, 6).getValues();
+	return ws.getRange(3, 1, 1, 17).getValues();
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
@@ -10,130 +11,307 @@
 	<!-- include javascript file here -->
 	<?!= include('javascript'); ?>
 </head>
+
 <body>
-	<h1>ESP32 Datalogger</h1>
-	<form>
-		<center>
-			<table id="temperature-info" style="color:#059e8a;">
-				<tr>
-					<td colspan="2" style="font-size: 15px; padding-bottom: 15px;">
-						<center id="date-last-measurement">
-							?
-						</center>
-					</td>
-					<td id="date-start-measurement" class="left" style="font-size:15px; padding-bottom:15px;">
-						?
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<i class="fas fa-thermometer-half fa-1x" aria-hidden="true"></i>
-						<span class="dht-labels">Temperature</span>
-					</td>
-					<td>
-						<span id="temperature">?</span>
-						<span>&deg;C</span>
-					</td>
-					<td>
-						<table id="temperature-stats">
+
+	<div class="header">
+		<a id="previous" class="previous round" style="float:left" onClick="slide('prev')">&#8249;</a>
+
+		<h1 style="display: inline">ESP32 Datalogger</h1>
+
+		<a id="next" class="next round" style="float:right" onClick="slide('next')">&#8250;</a>
+		<div id="info-version">2024 - v1.03</div>
+	</div>
+
+	<div class="container">
+		<div class="pages">
+			<div class="page one">
+				<form>
+					<center>
+						<table id="temperature-info" style="color:#059e8a;">
 							<tr>
-								<td style="font-size: 15px;">avg.</td>
-								<td class="right" style="font-size: 15px;">
-									<span id="temperature-avg">?</span>
-									<span>&deg;c</span>
+								<td colspan="2" style="font-size: 15px; padding-bottom: 15px;">
+									<center class="date-last-measurement">
+										?
+									</center>
+								</td>
+								<td class="date-start-measurement" class="left"
+									style="font-size:15px; padding-bottom:15px;">
+									?
 								</td>
 							</tr>
 							<tr>
-								<td style="font-size: 15px;">max</td>
-								<td class="right" style="font-size: 15px;">
-									<span id="temperature-max">?</span>
-									<span>&deg;c</span>
+								<td>
+									<i class="fas fa-thermometer-half fa-1x" aria-hidden="true"></i>
+									<span class="dht-labels">Temperature</span>
 								</td>
-							</tr>
-							<tr>
-								<td style="font-size: 15px;">min</td>
-								<td class="right" style="font-size: 15px;">
-									<span id="temperature-min">?</span>
-									<span>&deg;c</span>
+								<td>
+									<span id="temperature">?</span>
+									<span>&deg;C</span>
+								</td>
+								<td>
+									<table id="temperature-stats">
+										<tr>
+											<td style="font-size: 15px;">avg.</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="temperature-avg">?</span>
+												<span>&deg;c</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">max</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="temperature-max">?</span>
+												<span>&deg;c</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">min</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="temperature-min">?</span>
+												<span>&deg;c</span>
+											</td>
+										</tr>
+									</table>
 								</td>
 							</tr>
 						</table>
-					</td>
-				</tr>
-			</table>
-			<div style="width: auto; height: auto;">
-				<canvas id="lineChartTemperature" class="chartjs-render-monitor"></canvas>
-			</div>
+						<div style="width: auto; height: auto;">
+							<canvas id="lineChartTemperature" class="chartjs-render-monitor"></canvas>
+						</div>
 
-			<h1 id="feedback">retrieving data ...</h1>
-			<span id="loader"></span>
+						<h1 id="feedback">retrieving data ...</h1>
+						<span id="loader"></span>
 
-			<table id="humidity-info" style="color:#00add6;">
-				<tr>
-					<td colspan="3" style="font-size: 15px; padding-bottom: 15px;">
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<i class="fas fa-tint fa-1x"></i>
-						<span class="dht-labels">Humidity</span>
-					</td>
-					<td>
-						<span id="humidity">?</span>
-						<span>&percnt;</span>
-					</td>
-					<td>
-						<table id="humidity-stats">
+						<table id="humidity-info" style="color:#00add6;">
 							<tr>
-								<td style="font-size: 15px;">avg.</td>
-								<td class="right" style="font-size: 15px;">
-									<span id="humidity-avg">?</span>
-									<span>&percnt;</span>
+								<td colspan="3" style="font-size: 15px; padding-bottom: 15px;">
 								</td>
 							</tr>
 							<tr>
-								<td style="font-size: 15px;">max</td>
-								<td class="right" style="font-size: 15px;">
-									<span id="humidity-max">?</span>
+								<td>
+									<i class="fas fa-tint fa-1x"></i>
+									<span class="dht-labels">Humidity</span>
+								</td>
+								<td>
+									<span id="humidity">?</span>
 									<span>&percnt;</span>
 								</td>
-							</tr>
-							<tr>
-								<td style="font-size: 15px;">min</td>
-								<td class="right" style="font-size: 15px;">
-									<span id="humidity-min">?</span>
-									<span>&percnt;</span>
+								<td>
+									<table id="humidity-stats">
+										<tr>
+											<td style="font-size: 15px;">avg.</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="humidity-avg">?</span>
+												<span>&percnt;</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">max</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="humidity-max">?</span>
+												<span>&percnt;</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">min</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="humidity-min">?</span>
+												<span>&percnt;</span>
+											</td>
+										</tr>
+									</table>
 								</td>
 							</tr>
 						</table>
-					</td>
-				</tr>
-			</table>
-			<div style="width: auto; height: auto;">
-				<canvas id="lineChartHumidity" class="chartjs-render-monitor"></canvas>
+						<div style="width: auto; height: auto;">
+							<canvas id="lineChartHumidity" class="chartjs-render-monitor"></canvas>
+						</div>
+						<div class="info">
+							<div id="info"></div>
+						</div>
+					</center>
+				</form>
 			</div>
-		</center>
-		<div class="info">
-			<div id="info"></div>
-			<div id="info-version">2024 - v1.02</div>
+			<div class="page two">
+				<form>
+					<center>
+						<table id="esp32WorkTime-info" style="color:#6495ed;">
+							<tr>
+								<td colspan="2" style="font-size: 15px; padding-bottom: 15px;">
+									<center class="date-last-measurement">
+										?
+									</center>
+								</td>
+								<td class="date-start-measurement" class="left"
+									style="font-size:15px; padding-bottom:15px;">
+									?
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-regular fa-moon" aria-hidden="true"></i>
+									<span class="dht-labels">Sleep time</span>
+								</td>
+								<td colspan="2" style="text-align:left">
+									<span class="dht-labels" id="esp32SleepTime">?</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-regular fa-clock" aria-hidden="true"></i>
+									<span class="dht-labels">Work time</span>
+								</td>
+								<td>
+									<span class="dht-labels" id="esp32WorkTime">?</span>
+								</td>
+								<td>
+									<table id="esp32WorkTime-stats">
+										<tr>
+											<td style="font-size: 15px;">avg.</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="esp32WorkTime-avg">?</span>
+												<span>ms</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">max</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="esp32WorkTime-max">?</span>
+												<span>ms</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">min</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="esp32WorkTime-min">?</span>
+												<span>ms</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</center>
+				</form>
+				<form style="margin-top: 1vh">
+					<center>
+						<table id="esp32Temperature-info" style="color:#059e8a;">
+							<tr>
+								<td colspan="3" style="font-size: 15px; padding-bottom: 15px;">
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<span>&#8796;</span> <i class="fas fa-thermometer-half fa-1x"
+										aria-hidden="true"></i>
+									<span class="dht-labels">ESP32 v DHT22</span>
+								</td>
+								<td>
+									<span id="esp32Temperature">?</span>
+									<span>&deg;C</span>
+								</td>
+								<td>
+									<table id="esp32Temperature-stats">
+										<tr>
+											<td style="font-size: 15px;">avg.</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="esp32Temperature-avg">?</span>
+												<span>&deg;c</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">max</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="esp32Temperature-max">?</span>
+												<span>&deg;c</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">min</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="esp32Temperature-min">?</span>
+												<span>&deg;c</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+						<div style="width: auto; height: auto;">
+							<canvas id="lineChartEsp32Temperature" class="chartjs-render-monitor"></canvas>
+						</div>
+
+						<table id="batteryVoltage-info" style="color:#e69500;">
+							<tr>
+								<td colspan="3" style="font-size: 15px; padding-bottom: 15px;">
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-battery-half fa-1x fa-rotate-270" aria-hidden="true"></i>
+									<span class="dht-labels">Battery Voltage</span>
+								</td>
+								<td>
+									<span id="batteryVoltage">?</span>
+									<span>V</span>
+								</td>
+								<td>
+									<table id="batteryVoltage-stats">
+										<tr>
+											<td style="font-size: 15px;">avg.</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="batteryVoltage-avg">?</span>
+												<span>V</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">max</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="batteryVoltage-max">?</span>
+												<span>V</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="font-size: 15px;">min</td>
+											<td class="right" style="font-size: 15px;">
+												<span id="batteryVoltage-min">?</span>
+												<span>V</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+						<div style="width: auto; height: auto;">
+							<canvas id="lineChartBatteryVoltage" class="chartjs-render-monitor"></canvas>
+						</div>
+					</center>
+				</form>
+			</div>
 		</div>
-	</form>
-
+	</div>
 	<!-- hidden element to create the Rest page link -->
 	<?var url = getUrl();?><input type="hidden" value="<?= url ?>" id="url" />
-
 </body>
+
 </html>
 
 <!-- external scripts shall be put at the end of HTML (helps to responsivness of the page) -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+	integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"
+	integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js" integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"
+	integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- not used
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.js" integrity="sha512-Lii3WMtgA0C0qmmkdCpsG0Gjr6M0ajRyQRQSbTF6BsrVh/nhZdHpVZ76iMIPvQwz1eoXC3DmAg9K51qT5/dEVg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -157,7 +335,7 @@
 	}, 10_000); // in ms
 	*/
 
-	$( document ).ready(function() {
+	$(document).ready(function () {
 		/// execute script when the page is loaded
 		getStatistics();
 		getSensorValues();
@@ -181,7 +359,6 @@
 	* Get request for temperatures and humidities
 	*/
 	function getSensorValues() {
-
 		/**
 		* Request server to get sensor values
 		* Handlers onSucces/onFailure provided
@@ -191,5 +368,28 @@
 			.withFailureHandler(onFailure)
 			.getSensorValuesFromGoogleSheet();
 	};
+
+	const pages = document.querySelectorAll(".page");
+	const translateAmount = 100;
+	let translate = 0;
+
+
+	slide = (direction) => {
+
+		var next = document.getElementById("next");
+		var prev = document.getElementById("previous");
+		if (next.style.visibility === "hidden") {
+			next.style.visibility = "visible";
+			prev.style.visibility = "hidden";
+		} else {
+			next.style.visibility = "hidden";
+			prev.style.visibility = "visible";
+		}
+
+		direction === "next" ? translate -= translateAmount : translate += translateAmount;
+		pages.forEach(
+			pages => (pages.style.transform = `translateX(${translate}%)`)
+		);
+	}
 
 </script>
