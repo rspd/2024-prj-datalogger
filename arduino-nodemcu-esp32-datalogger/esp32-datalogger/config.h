@@ -3,8 +3,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Debug purposes
+// #define DEBUG
 
-#if 0
+#ifdef DEBUG
 #define DBGOUT_INIT() do { \
 	Serial.begin(115200);  \
 	Serial.println();      \
@@ -24,10 +25,9 @@
 // maximum of measurement sets that can be stored
 // when no wifi connection for a time equal to
 //   BUFFER_MAX_SIZE * TIME_IN_DEEP_SLEEP
-// e.g 128 x 5 minutes = 640 minutes = 10 hours 40 minutes
+// e.g 128 x 10 minutes = 1280 minutes = 21 hours 20 minutes
 // when wifi disconnection exceeds this time old measurement
-// values are overwritten storing always the last measurement
-// sets for the las 640 minutes
+// values are overwritten storing always the last measurements
 #define BUFFER_MAX_SIZE 128UL
 
 #define	TOKEN_REFRESH_SECONDS_TIMEOUT (10 * 60UL)
@@ -78,16 +78,22 @@
 
 // Uncomment whatever type you're using!
 //#define DHTTYPE DHT11   // DHT 11
-#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
+#define DHTTYPE DHT22     // DHT 22  (AM2302), AM2321
 
 #define DHT_DATA_PULLUP() pinMode(DHTPIN, INPUT_PULLUP);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// ESP32 wake up configuration
 
+#ifdef DEBUG
+#define TIME_IN_DEEP_SLEEP 60
+#else
+#define TIME_IN_DEEP_SLEEP 600   /* Time ESP32 will go to sleep (in seconds)   */
+#endif
 #define S_TO_uS_FACTOR 1000000ULL /* Conversion factor seconds to micro seconds */
-#define TIME_IN_DEEP_SLEEP 300    /* Time ESP32 will go to sleep (in seconds)   */
+#define MICROSECS_IN_DEEP_SLEEP (TIME_IN_DEEP_SLEEP * S_TO_uS_FACTOR)
+
 
 
 ///////////////////////////////////////////////////////////////////////////////

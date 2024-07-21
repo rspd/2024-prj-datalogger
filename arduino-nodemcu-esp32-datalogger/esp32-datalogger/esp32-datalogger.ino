@@ -67,6 +67,9 @@ static void	initSensor();
 // read external battery voltage
 static void readBatteryVoltage();
 
+// check wifi status
+static bool checkWiFi();
+
 // connect to wifi
 static bool connectToWiFi();
 
@@ -93,8 +96,12 @@ static void printWakeupReason();
 
 enum Constants
 {
-	HALF_SECOND_DELAY = 500,
-	ONE_SECOND_DELAY = 1000,
+	MAX_GSHEET_RETRY_COUNT = 3UL,
+	MAX_RETRY_COUNT = 10UL,
+	SHORT_MILLIS_DELAY = 10UL,
+	HALF_SECOND_DELAY = 500UL,
+	ONE_SECOND_DELAY = 1000UL,
+	WORK_MILLIS_TIMEOUT = 15000UL,
 };
 
 typedef enum
@@ -112,31 +119,37 @@ typedef enum
 	STATE_ERROR
 } state_t;
 
+// R1=(75K+5,7K), R2=100K
+// measured values for R1 and R2
+constexpr float	RESISTOR_R1 = 80.5f;
+constexpr float	RESISTOR_R2 = 99.9f;
+
+constexpr float CENTI_CONVERSION_FACTOR = 100.0f;
+
 // timer variables
 unsigned long epochTimeNow;
 unsigned long utilTimeStamp;
 
 // sensor variables
-float humidity = 0.0;
 float temperature = 0.0;
-float battVolts = 0.0;
-unsigned int battMillivolts = 0;
+float humidity = 0.0;
 float esp32Temperature = 0.0;
+int battMillivolts = 0;
 
 // ntp server to request epoch time
 const char *ntpServer = "pool.ntp.org";
 
 // esp32-datalogger version
-const char *VERSION = "1.0.3";
+const char *VERSION = "1.0.4-beta";
 
 // main machine state variable
 state_t state;
 
 // buffers used when no wifi connection (SRAM RTC SLOW MEMORY)
-RTC_DATA_ATTR static unsigned int temperatureBuffer[BUFFER_MAX_SIZE];
-RTC_DATA_ATTR static unsigned int humidityBuffer[BUFFER_MAX_SIZE];
-RTC_DATA_ATTR static unsigned int battVoltsBuffer[BUFFER_MAX_SIZE];
-RTC_DATA_ATTR static unsigned int esp32TemperatureBuffer[BUFFER_MAX_SIZE];
+RTC_DATA_ATTR static int temperatureBuffer[BUFFER_MAX_SIZE];
+RTC_DATA_ATTR static int humidityBuffer[BUFFER_MAX_SIZE];
+RTC_DATA_ATTR static int esp32TemperatureBuffer[BUFFER_MAX_SIZE];
+RTC_DATA_ATTR static int battVoltsBuffer[BUFFER_MAX_SIZE];
 RTC_DATA_ATTR static unsigned int esp32WorkTimeBuffer[BUFFER_MAX_SIZE];
 RTC_DATA_ATTR unsigned char rdBufferIdx = 0;
 RTC_DATA_ATTR unsigned char wrBufferIdx = 0; // index to write next value
@@ -215,6 +228,10 @@ void loop()
 		case STATE_APPEND_GSHEET:
 			if (!ready)
 			{
+				if (millis() > WORK_MILLIS_TIMEOUT)
+				{
+					state = STATE_STORE_DATA;
+				}
 				break;
 			}
 			appendSensorValuesToGSheet();
@@ -249,7 +266,7 @@ static void	initSensor()
 	dht.begin();
 	while (1)
 	{
-		delay(ONE_SECOND_DELAY);
+		delay(HALF_SECOND_DELAY);
 		if (dht.readTemperature() != NAN)
 		{
 			break;
@@ -262,22 +279,37 @@ static void	initSensor()
 static void readBatteryVoltage()
 {
 	battMillivolts = 0;
-	battVolts = 0.0;
-	for (uint8_t i=0; i<10; i++)
+	for (uint8_t i=0; i<MAX_RETRY_COUNT; i++)
 	{
-		//battVolts += analogRead(ANALOG_BATT_GPIO) * ((80.5f + 99.9f)/99.9f) * 3.3f / 4095.0f; // R1=(75K+5,7K), R2=100K
+		// do not calculet here -> small values error propagation, due float operation!
+		//battVolts += analogRead(ANALOG_BATT_GPIO) * ((RESISTOR_R1 + RESISTOR_R2)/RESISTOR_R2); // R1=(75K+5,7K), R2=100K
 		battMillivolts += analogReadMilliVolts(ANALOG_BATT_GPIO);
 	}
-	battVolts = ((battMillivolts / 10.0f)/ 1000.0f) * ((80.5f + 99.9f)/99.9f); // R1=(75K+5,7K), R2=100K
+	/*
+	 calculate averaged battery voltage
+	     + <----
+	            |
+	           |R1|
+	  VBATT     |-------> ANALOG_BATT_GPIO
+	 (6V max)  |R2|         (3V3 max)
+	            |
+	     - <------------>     GND
+	*/
+	battMillivolts = (battMillivolts/MAX_RETRY_COUNT) * ((RESISTOR_R1 + RESISTOR_R2)/RESISTOR_R2);
 	DBGOUT(Serial.print, millis());
 	DBGOUT(Serial.print, " battery ");
-	DBGOUT(Serial.print, battVolts);
+	DBGOUT(Serial.print, battMillivolts);
 	DBGOUT(Serial.println, "V");
+}
+
+static bool checkWiFi()
+{
+	return (WiFi.status() == WL_CONNECTED);
 }
 
 static bool connectToWiFi()
 {
-	if (WiFi.status() == WL_CONNECTED)
+	if (checkWiFi())
 	{
 		// just return if wifi connected
 		// note: test purposes as on wakeup the wifi is always disconnected
@@ -294,7 +326,7 @@ static bool connectToWiFi()
 	int cnt = 0;
 	do
 	{
-		delay(ONE_SECOND_DELAY);
+		delay(HALF_SECOND_DELAY);
 		++cnt;
 		if (cnt >= RECONNECT_WIFI_TIMES_MAX)
 		{
@@ -302,17 +334,15 @@ static bool connectToWiFi()
 			DBGOUT(Serial.println, " failed to connect to wifi...");
 			return false;
 		}
-	} while (WiFi.status() != WL_CONNECTED);
+	} while (!checkWiFi());
 
-	if (cnt < RECONNECT_WIFI_TIMES_MAX) {
-		// configure time
-		configTime(0, 0, ntpServer);
+	// configure time
+	configTime(0, 0, ntpServer);
 
-		if (epochTimeNow == 0)
-		{
-			delay(10);
-			epochTimeNow = getTime();
-		}
+	if (epochTimeNow == 0)
+	{
+		delay(SHORT_MILLIS_DELAY);
+		epochTimeNow = getTime();
 	}
 
 	// esp32's IP address
@@ -325,7 +355,7 @@ static bool connectToWiFi()
 
 static void initGSheet()
 {
-	GSheet.printf("ESP Google Sheet Client v%s\n\n", ESP_GOOGLE_SHEET_CLIENT_VERSION);
+	DBGOUT(GSheet.printf, "ESP Google Sheet Client v%s\n\n", ESP_GOOGLE_SHEET_CLIENT_VERSION);
 
 	// set the callback for google api access token generation status (for debug only)
 	GSheet.setTokenCallback(tokenStatusCallback);
@@ -341,12 +371,12 @@ void tokenStatusCallback(TokenInfo info)
 {
 	if (info.status == token_status_error)
 	{
-		GSheet.printf("Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
-		GSheet.printf("Token error: %s\n", GSheet.getTokenError(info).c_str());
+		DBGOUT(GSheet.printf, "Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
+		DBGOUT(GSheet.printf, "Token error: %s\n", GSheet.getTokenError(info).c_str());
 	}
 	else
 	{
-		GSheet.printf("Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
+		DBGOUT(GSheet.printf, "Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
 	}
 }
 
@@ -376,7 +406,7 @@ static void readSensor()
 		if (isnan(h) || isnan(t) || isnan(espT))
 		{
 			++retryCnt;
-			if (retryCnt > 10)
+			if (retryCnt > MAX_RETRY_COUNT)
 			{
 				DBGOUT(Serial.println, F("DHT sensor read failed!"));
 			}
@@ -412,7 +442,7 @@ static unsigned long getTime()
 	struct tm timeinfo;
 	if (!getLocalTime(&timeinfo))
 	{
-		// DBGOUT(Serial.println, "Failed to obtain time");
+		DBGOUT(Serial.println, "Failed to obtain time");
 		return (0);
 	}
 	time(&now);
@@ -424,7 +454,7 @@ static bool appendSensorValuesToGSheet(void)
 	FirebaseJson response;
 	FirebaseJson valueRange;
 	unsigned char gsheetErrCnt = 0;
-	const unsigned char nrMeasurementSets = (wrBufferIdx - rdBufferIdx);
+	const unsigned char nrMeasurementSets = (wrBufferIdx - rdBufferIdx) % BUFFER_MAX_SIZE;
 
 	DBGOUT(Serial.println, "\nAppend spreadsheet values...");
 	DBGOUT(Serial.println, "----------------------------");
@@ -445,27 +475,27 @@ static bool appendSensorValuesToGSheet(void)
 		valueRange.add("majorDimension", "COLUMNS");
 		if (rdBufferIdx != wrBufferIdx)
 		{
-			unsigned long pastEpochTime = epochTimeNow - (wrBufferIdx - rdBufferIdx)*TIME_IN_DEEP_SLEEP;
+			unsigned long pastEpochTime = epochTimeNow - ((wrBufferIdx - rdBufferIdx) % BUFFER_MAX_SIZE)*TIME_IN_DEEP_SLEEP;
 			DBGOUT(Serial.print, "Get measurement (ts:");
 			DBGOUT(Serial.print, pastEpochTime);
 			DBGOUT(Serial.println, ") from buffer");
 
 			// set values from buffer
 			valueRange.set("values/[0]/[0]", pastEpochTime);
-			valueRange.set("values/[1]/[0]", (temperatureBuffer[rdBufferIdx] / 100.0f));
-			valueRange.set("values/[2]/[0]", (humidityBuffer[rdBufferIdx] / 100.0f));
-			valueRange.set("values/[3]/[0]", (battVoltsBuffer[rdBufferIdx] / 100.0f));
-			valueRange.set("values/[4]/[0]", (esp32TemperatureBuffer[rdBufferIdx] / 100.0f));
+			valueRange.set("values/[1]/[0]", temperatureBuffer[rdBufferIdx]);
+			valueRange.set("values/[2]/[0]", humidityBuffer[rdBufferIdx]);
+			valueRange.set("values/[3]/[0]", battVoltsBuffer[rdBufferIdx]);
+			valueRange.set("values/[4]/[0]", esp32TemperatureBuffer[rdBufferIdx]);
 			valueRange.set("values/[5]/[0]", esp32WorkTimeBuffer[rdBufferIdx]);
 		}
 		else
 		{
 			// set last 'now' values
 			valueRange.set("values/[0]/[0]", epochTimeNow);
-			valueRange.set("values/[1]/[0]", temperature);
-			valueRange.set("values/[2]/[0]", humidity);
-			valueRange.set("values/[3]/[0]", battVolts);
-			valueRange.set("values/[4]/[0]", esp32Temperature);
+			valueRange.set("values/[1]/[0]", (int) (temperature * CENTI_CONVERSION_FACTOR));
+			valueRange.set("values/[2]/[0]", (int) (humidity * CENTI_CONVERSION_FACTOR));
+			valueRange.set("values/[3]/[0]", (int) battMillivolts);
+			valueRange.set("values/[4]/[0]", (int) (esp32Temperature * CENTI_CONVERSION_FACTOR));
 			/* add 2ms, measured max. time from here until calling esp_deep_sleep_start() */
 			valueRange.set("values/[5]/[0]", (unsigned int) millis() + 2);
 		}
@@ -496,7 +526,7 @@ static bool appendSensorValuesToGSheet(void)
 			++gsheetErrCnt;
 			DBGOUT(Serial.println, GSheet.errorReason());
 		}
-	} while (gsheetErrCnt < 3);
+	} while (gsheetErrCnt < MAX_GSHEET_RETRY_COUNT);
 
 	DBGOUT(Serial.println, "");
 	DBGOUT(Serial.println, ESP.getFreeHeap());
@@ -507,10 +537,10 @@ static bool appendSensorValuesToGSheet(void)
 static void storeData()
 {
 	DBGOUT(Serial.println, "Append measurement in buffer");
-	temperatureBuffer[wrBufferIdx] = (unsigned int) (temperature * 100.0f);
-	humidityBuffer[wrBufferIdx] = (unsigned int) (humidity * 100.0f);
-	battVoltsBuffer[wrBufferIdx] = (unsigned int) (battVolts * 100.0f);
-	esp32TemperatureBuffer[wrBufferIdx] = (unsigned int) (esp32Temperature * 100.0f);
+	temperatureBuffer[wrBufferIdx] = (int) (temperature * CENTI_CONVERSION_FACTOR);
+	humidityBuffer[wrBufferIdx] = (int) (humidity * CENTI_CONVERSION_FACTOR);
+	battVoltsBuffer[wrBufferIdx] = (int) battMillivolts;
+	esp32TemperatureBuffer[wrBufferIdx] = (int) (esp32Temperature * CENTI_CONVERSION_FACTOR);
 	esp32WorkTimeBuffer[wrBufferIdx] = (unsigned int) millis();
 	wrBufferIdx = (wrBufferIdx + 1) % BUFFER_MAX_SIZE;
 }
@@ -525,19 +555,16 @@ static void enterDeepSleepNow()
 
 	// save working time, configure the wake up source and set time to sleep
 	const unsigned long elapsedMillis = millis();
-	const uint64_t microSecondsInDeepSleep = TIME_IN_DEEP_SLEEP * S_TO_uS_FACTOR;
-	uint64_t elapsedMicroseconds = elapsedMillis * 1000ULL;
-	if (elapsedMicroseconds >= microSecondsInDeepSleep)
-	{
-		elapsedMicroseconds = 0;
-	}
-	esp_sleep_enable_timer_wakeup(microSecondsInDeepSleep - elapsedMicroseconds);
-	esp_deep_sleep_start();
-
-	// shall not execute here, only debug purposes
-	delay(10000);
-	epochTimeNow = getTime();
-	state = STATE_CHECK_BATTVOLTAGE;
+	const uint64_t elapsedMicroseconds = elapsedMillis * 1000ULL;
+	#ifndef DEBUG
+		esp_sleep_enable_timer_wakeup(MICROSECS_IN_DEEP_SLEEP - elapsedMicroseconds);
+		esp_deep_sleep_start();
+	#else
+		// only debug purposes
+		delay(10000);
+		epochTimeNow = getTime();
+		state = STATE_CHECK_BATTVOLTAGE;
+	#endif
 }
 
 static void printWakeupReason()
