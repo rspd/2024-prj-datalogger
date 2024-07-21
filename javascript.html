@@ -1,7 +1,4 @@
 <script>
-
-	var lineChartEsp32TemperatureValues = [];
-
 	/**
 	 * On success handler
 	 * Creates a line chart in case server executes
@@ -11,17 +8,15 @@
 		// just for debug purposes
 		//console.log(ar);
 
+		var measurementTimeStamps = [];
 		var lineChartLabels = [];
 		var lineChartTemperatureValues = [];
 		var lineChartHumidityValues = [];
 		var lineChartBatteryVoltageValues = [];
-		var chartColors = ['#059e8a', '#00add6', '#e69500'];
+		var lineChartEsp32TemperatureValues = [];
+		var lineChartEsp32DeltaTemperatureValues = [];
 
-		var catchFirstElement = false;
-
-		var max = 0.0;
-		var min = 0.0;
-		var sum = 0.0;
+		var chartColors = ['#059e8a', '#00add6', '#e69500', '#98fb98'];
 
 		//let shouldSkip = false;
 		ar.forEach(function (item, index) {
@@ -36,29 +31,16 @@
 					  return;
 				  }
 			*/
-			if (catchFirstElement == false) {
-				startMeasurementsDate = new Date(item[0] * 1000);
-				catchFirstElement = true;
-			}
-			var myDate = formattedDateTime(new Date(item[0] * 1000));
+			measurementTimeStamps.push(+item[0]);
+			let myDate = formattedDateTime(new Date(item[0] * 1000));
 			lineChartLabels.push(myDate); // or lineChartLabels.push(myDate.toGMTString());
-			lineChartTemperatureValues.push((+item[1]).toFixed(1));
-			lineChartHumidityValues.push((+item[2]).toFixed(1));
-			lineChartBatteryVoltageValues.push((+item[3]).toFixed(3));
-
-			var deltaTemperature = ((+item[4]).toFixed(1) - (+item[1]).toFixed(1)).toFixed(1);
-			lineChartEsp32TemperatureValues.push(deltaTemperature);
-			var fDeltaTemperature = parseFloat(deltaTemperature);
-			if (fDeltaTemperature > max) {
-				max = fDeltaTemperature;
-			}
-			if (fDeltaTemperature < min) {
-				min = fDeltaTemperature;
-			}
-			sum = sum + fDeltaTemperature;
+			lineChartTemperatureValues.push((+item[1] / 100).toFixed(1));
+			lineChartHumidityValues.push((+item[2] / 100).toFixed(1));
+			lineChartBatteryVoltageValues.push((+item[3] / 1000).toFixed(3));
+			lineChartEsp32TemperatureValues.push((+item[4] / 100).toFixed(1));
+			var deltaTemperature = (((+item[4]).toFixed(1) - (+item[1]).toFixed(1)) / 100).toFixed(1);
+			lineChartEsp32DeltaTemperatureValues.push(deltaTemperature);
 		});
-
-		let avg = sum / lineChartEsp32TemperatureValues.length;
 
 		// just for debug purposes
 		//console.log("lineChartTemperatureValues= " + lineChartTemperatureValues)
@@ -67,19 +49,28 @@
 		var lineChartTemperatureData = {
 			labels: lineChartLabels,
 			datasets: [{
-				label: 'Temperature',
+				label: 'DHT22',
 				data: lineChartTemperatureValues,
 				fill: false,
 				borderColor: chartColors[0],
 				tension: 0.1,
-				showLine: false,
-			}],
+				showLine: true,
+			},
+			{
+				label: 'ESP32',
+				data: lineChartEsp32TemperatureValues,
+				fill: false,
+				borderColor: chartColors[3],
+				tension: 0.1,
+				showLine: true,
+			}
+			],
 		};
 
 		var chartOptions = {
 			plugins: {
 				legend: {
-					display: false
+					display: true
 				},
 				zoom: {
 					zoom: {
@@ -127,6 +118,48 @@
 			options: chartOptions,
 		});
 
+
+		var chartOptionsNoLegend = {
+			plugins: {
+				legend: {
+					display: false
+				},
+				zoom: {
+					zoom: {
+						wheel: {
+							enabled: true,
+						},
+						pinch: {
+							enabled: true
+						},
+						mode: 'x',
+					}
+				},
+				/*, // not needed here anymore, toFixed() done directly on JSON response
+				tooltip: {
+				  callbacks: {
+					label: function(context) {
+					  // this guarantees that 1 decimal place is shown -> e.g. '22.0'
+					  return context.parsed.y.toFixed(1);
+					}
+				  }
+				}
+				*/
+			},
+			scales: {
+				x: {
+					ticks: {
+						display: true
+					},
+					display: false
+				},
+				y: {
+					beginAtZero: false,
+					display: true,
+				}
+			}
+		};
+
 		// the line chart data
 		var lineChartHumidityData = {
 			labels: lineChartLabels,
@@ -136,7 +169,7 @@
 				fill: false,
 				borderColor: chartColors[1],
 				tension: 0.1,
-				showLine: false,
+				showLine: true,
 			}],
 		};
 
@@ -147,7 +180,7 @@
 		var lineChartHumidity = new Chart(ctx, {
 			type: 'line',
 			data: lineChartHumidityData,
-			options: chartOptions,
+			options: chartOptionsNoLegend,
 		});
 
 		// the line chart data
@@ -159,7 +192,7 @@
 				fill: false,
 				borderColor: chartColors[2],
 				tension: 0.1,
-				showLine: false,
+				showLine: true,
 			}],
 		};
 
@@ -206,11 +239,11 @@
 		});
 
 		// the line chart data
-		var lineChartEsp32TemperatureData = {
+		var lineChartEsp32DeltaTemperatureData = {
 			labels: lineChartLabels,
 			datasets: [{
 				label: 'Temperature',
-				data: lineChartEsp32TemperatureValues,
+				data: lineChartEsp32DeltaTemperatureValues,
 				fill: false,
 				borderColor: chartColors[0],
 				tension: 0.1,
@@ -224,26 +257,54 @@
 		// render/show/create the line chart to be shown now
 		var lineChartEsp32Temperature = new Chart(ctx, {
 			type: 'line',
-			data: lineChartEsp32TemperatureData,
-			options: chartOptions,
+			data: lineChartEsp32DeltaTemperatureData,
+			options: chartOptionsNoLegend,
 		});
 
-		var nrOfSamples = lineChartLabels.length;
-		document.getElementById("info").innerText = "Total of " + nrOfSamples + " measurements during the period " + lineChartLabels[0] + " - " + lineChartLabels[nrOfSamples - 1];
+		let nrOfSamples = lineChartLabels.length;
+		let firstMeasTime = new Date(measurementTimeStamps[0] * 1000);
+		let lastMeasTime = new Date(measurementTimeStamps[measurementTimeStamps.length - 1] * 1000);
+		let secondsSinceMeasStart = (lastMeasTime.getTime() - firstMeasTime.getTime()) / 1000;
+		document.getElementById("info").innerText = "Total of " + nrOfSamples + " measurements in " + msToTime(secondsSinceMeasStart * 1000);
 
 		document.getElementById("temperature").innerText = lineChartTemperatureValues[lineChartTemperatureValues.length - 1];
 		document.getElementById("humidity").innerText = lineChartHumidityValues[lineChartHumidityValues.length - 1];
 		document.getElementById("batteryVoltage").innerText = lineChartBatteryVoltageValues[lineChartBatteryVoltageValues.length - 1];
-		document.getElementById("esp32Temperature").innerText = lineChartEsp32TemperatureValues[lineChartEsp32TemperatureValues.length - 1];
+		document.getElementById("esp32Temperature").innerText = lineChartEsp32DeltaTemperatureValues[lineChartEsp32DeltaTemperatureValues.length - 1];
 
-		//var arr = maxMinAvg(lineChartEsp32TemperatureValues);
-		document.getElementById("esp32Temperature-avg").innerText = parseFloat(avg).toFixed(1);
-		document.getElementById("esp32Temperature-max").innerText = parseFloat(max).toFixed(1);
-		document.getElementById("esp32Temperature-min").innerText = parseFloat(min).toFixed(1);
+		var startTime = performance.now()
+		var arr = maxMinAvg(lineChartEsp32DeltaTemperatureValues);
+		document.getElementById("esp32Temperature-avg").innerText = arr[2].toFixed(1);
+		document.getElementById("esp32Temperature-max").innerText = lineChartEsp32DeltaTemperatureValues[arr[0]];
+		document.getElementById("esp32Temperature-min").innerText = lineChartEsp32DeltaTemperatureValues[arr[1]];
+
+		arr = maxMinAvg(lineChartTemperatureValues);
+		document.getElementById("temperature-avg").innerText = arr[2].toFixed(1);
+		document.getElementById("temperature-max").innerText = lineChartTemperatureValues[arr[0]];
+		document.getElementById("temperature-min").innerText = lineChartTemperatureValues[arr[1]];
+
+		arr = maxMinAvg(lineChartHumidityValues);
+		document.getElementById("humidity-avg").innerText = arr[2].toFixed(1);
+		document.getElementById("humidity-max").innerText = lineChartHumidityValues[arr[0]];
+		document.getElementById("humidity-min").innerText = lineChartHumidityValues[arr[1]];
+
+		arr = maxMinAvg(lineChartBatteryVoltageValues);
+		document.getElementById("batteryVoltage-avg").innerText = arr[2].toFixed(3);
+		document.getElementById("batteryVoltage-max").innerText = lineChartBatteryVoltageValues[arr[0]];
+		document.getElementById("batteryVoltage-min").innerText = lineChartBatteryVoltageValues[arr[1]];
+
+		const sleepTime = arrayTimeStampDelta(measurementTimeStamps);
+		arr = maxMinAvg(sleepTime);
+		document.getElementById("esp32SleepTime-avg").innerText = msToTime(sleepTime[2] * 1000, true);
+		document.getElementById("esp32SleepTime-max").innerText = msToTime(sleepTime[0] * 1000, true);
+		document.getElementById("esp32SleepTime-min").innerText = msToTime(sleepTime[1] * 1000, true);
+
+		var endTime = performance.now()
+		console.log(`execution took ${endTime - startTime} milliseconds`);
 
 		const dateStartMeas = document.querySelectorAll('.date-start-measurement');
 		dateStartMeas.forEach(elem => {
-			elem.innerHTML = "since " + formattedDate(new Date(lineChartLabels[0]));
+			elem.innerHTML = "since " + lineChartLabels[0];
 		});
 
 		const dateLastMeas = document.querySelectorAll(".date-last-measurement");
@@ -252,7 +313,10 @@
 		});
 
 		// clear user feedback
-		document.getElementById("feedback").innerText = "";
+		document.getElementById("hidden-header-form").style.display = "block";
+		document.getElementById("hidden-upper-form").style.display = "block";
+		document.getElementById("hidden-lower-form").style.display = "block";
+		document.getElementById("feedback").style.display = "none";
 		document.getElementById("loader").style.display = "none";
 		document.getElementById("temperature-info").style.display = "block";
 		document.getElementById("temperature-stats").style.display = "block";
@@ -264,11 +328,12 @@
 		document.getElementById("esp32Temperature-stats").style.display = "block";
 		document.getElementById("esp32WorkTime-info").style.display = "block";
 		document.getElementById("esp32WorkTime-stats").style.display = "block";
+		document.getElementById("esp32SleepTime-stats").style.display = "block";
 		document.getElementById("next").style.visibility = "visible";
 	};
 
 	/**
-	* Formatted date & time (yyyy-mm-dd, hh:mm)
+	* Formatted date & time (yyyy-mm-dd, hh:mm:ss)
 	*/
 	function formattedDateTime(localDate) {
 		const yyyy = localDate.getFullYear();
@@ -279,8 +344,10 @@
 		const hours = localDate.getHours();
 		let minutes = localDate.getMinutes();
 		if (minutes < 10) minutes = '0' + minutes;
+		let seconds = localDate.getSeconds();
+		if (seconds < 10) seconds = '0' + seconds;
 
-		return yyyy + '-' + mm + '-' + dd + ', ' + hours + ':' + minutes;
+		return yyyy + '-' + mm + '-' + dd + ', ' + hours + ':' + minutes + ':' + seconds;
 	}
 
 	/**
@@ -299,7 +366,7 @@
 	/**
 	 * Converts milliseconds to (D day(s), HH:MM:SS.s) format
 	 */
-	function msToTime(millis) {
+	function msToTime(millis, noLeadingZeroes = false) {
 		var milliseconds = Math.floor((millis % 1000) / 100),
 			seconds = Math.floor((millis / 1000) % 60),
 			minutes = Math.floor((millis / (1000 * 60)) % 60),
@@ -310,7 +377,13 @@
 		minutes = (minutes < 10) ? "0" + minutes : minutes;
 		seconds = (seconds < 10) ? "0" + seconds : seconds;
 
-		let hourMinSecs = hours + ":" + minutes + ":" + seconds + "." + milliseconds;
+		if (noLeadingZeroes) {
+			if (hours === "00") {
+				return minutes + ":" + seconds;
+			}
+		}
+
+		let hourMinSecs = hours + ":" + minutes + ":" + seconds; // + "." + milliseconds;
 
 		if (days == 0) {
 			return hourMinSecs;
@@ -328,19 +401,34 @@
 		var max = parseFloat(arr[0]);
 		var min = parseFloat(arr[0]);
 		var sum = parseFloat(arr[0]);
+		var indexMax = 0;
+		var indexMin = 0;
 		for (var i = 1; i < arr.length; i++) {
 			let value = parseFloat(arr[i])
 			if (value > max) {
 				max = value;
+				indexMax = i;
 			}
 			if (value < min) {
 				min = value;
+				indexMin = i;
 			}
 			sum = sum + value;
 		}
-		console.log(max); console.log(min); console.log(sum);
-		return [max, min, sum / arr.length];
+		//console.log(max); console.log(min); console.log(sum); console.log(arr.length)
+		let avg = sum / arr.length;
+		//console.log(avg)
+		return [indexMax, indexMin, avg];
 	}
+
+	const arrayTimeStampDelta = (arr) => {
+		const res = [];
+		for (let i = 0; i < arr.length; i++) {
+			const el = Math.floor((+arr[i + 1]) - (+arr[i]));
+			res[i] = el;
+		};
+		return res;
+	};
 
 	/**
 	 * Execute on server failure
@@ -358,7 +446,7 @@
 	 */
 	function onSuccessStatistics(ar) {
 		// just for debug purposes
-		console.log(ar);
+		//console.log(ar);
 
 		//let shouldSkip = false;
 		ar.forEach(function (item, index) {
@@ -374,21 +462,26 @@
 					  return;
 				  }
 			*/
-			document.getElementById("temperature-avg").innerText = parseFloat(item[0]).toFixed(1);
-			document.getElementById("temperature-max").innerText = parseFloat(item[1]).toFixed(1);
-			document.getElementById("temperature-min").innerText = parseFloat(item[2]).toFixed(1);
-			document.getElementById("humidity-avg").innerText = parseFloat(item[3]).toFixed(1);
-			document.getElementById("humidity-max").innerText = parseFloat(item[4]).toFixed(1);
-			document.getElementById("humidity-min").innerText = parseFloat(item[5]).toFixed(1);
-			document.getElementById("batteryVoltage-avg").innerText = parseFloat(item[6]).toFixed(3);
-			document.getElementById("batteryVoltage-max").innerText = parseFloat(item[7]).toFixed(3);
-			document.getElementById("batteryVoltage-min").innerText = parseFloat(item[8]).toFixed(3);
+
+			/*
+			!!!! averages, min/max values are now calculated by maxMinAvg() !!!
+			TODO: transfer of these values would not be needed, deprecate if not used
+				  document.getElementById("temperature-avg").innerText = parseFloat(item[0]).toFixed(1);
+				  document.getElementById("temperature-max").innerText = parseFloat(item[1]).toFixed(1);
+				  document.getElementById("temperature-min").innerText = parseFloat(item[2]).toFixed(1);
+				  document.getElementById("humidity-avg").innerText = parseFloat(item[3]).toFixed(1);
+				  document.getElementById("humidity-max").innerText = parseFloat(item[4]).toFixed(1);
+				  document.getElementById("humidity-min").innerText = parseFloat(item[5]).toFixed(1);
+				  document.getElementById("batteryVoltage-avg").innerText = parseFloat(item[6]).toFixed(3);
+				  document.getElementById("batteryVoltage-max").innerText = parseFloat(item[7]).toFixed(3);
+				  document.getElementById("batteryVoltage-min").innerText = parseFloat(item[8]).toFixed(3);
+			*/
 
 			document.getElementById("esp32WorkTime").innerText = msToTime(parseInt(item[12]));
+			document.getElementById("esp32WorkTime-avg").innerText = parseInt(item[13]);
+			document.getElementById("esp32WorkTime-max").innerText = parseInt(item[14]);
+			document.getElementById("esp32WorkTime-min").innerText = parseInt(item[15]);
 			document.getElementById("esp32SleepTime").innerText = msToTime(parseInt(item[16]) * 1000);
-			document.getElementById("esp32WorkTime-avg").innerText = (item[13] - item[0]).toFixed(1);
-			document.getElementById("esp32WorkTime-max").innerText = (item[14] - item[1]).toFixed(1);
-			document.getElementById("esp32WorkTime-min").innerText = (item[15] - item[2]).toFixed(1);
 		});
 	}
 

@@ -9,7 +9,7 @@
 
 	.container {
 		width: 100%;
-		height: 120vh;
+		height: 130vh;
 		overflow: hidden;
 	}
 
@@ -21,7 +21,7 @@
 
 	.page {
 		width: 100%;
-		height: 110vh;
+		height: 120vh;
 		//display: flex;
 		align-items: center;
 		justify-content: center;
@@ -105,6 +105,7 @@
 	}
 
 	table {
+		width: 100%;
 		display: none;
 	}
 
@@ -116,7 +117,8 @@
 	}
 
 	td {
-		padding-bottom: 0px
+		padding-bottom: 0px;
+		text-align: left;
 	}
 
 	body {
@@ -137,9 +139,15 @@
 		max-width: 80vh;
 		margin: auto;
 		padding: 20px;
-		background: #fff;
+		background: #f4f4f4;
 		border-radius: 1vh;
 		box-shadow: 0 0 2vh rgba(0, 0, 0, 0.1);
+	}
+
+	#hidden-upper-form,
+	#hidden-lower-form,
+	#hidden-header-form {
+		display: none;
 	}
 
 	label {
@@ -203,6 +211,7 @@
 	}
 
 	.info {
+		visibility: hidden;
 		color: #808080;
 		padding-top: 15px;
 	}
