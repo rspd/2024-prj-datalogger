@@ -11,6 +11,7 @@
 		var measurementTimeStamps = [];
 		var lineChartLabels = [];
 		var lineChartTemperatureValues = [];
+		var lineChartHeatIndexValues = [];
 		var lineChartHumidityValues = [];
 		var lineChartBatteryVoltageValues = [];
 		var lineChartEsp32TemperatureValues = [];
@@ -35,6 +36,7 @@
 			let myDate = formattedDateTime(new Date(item[0] * 1000));
 			lineChartLabels.push(myDate); // or lineChartLabels.push(myDate.toGMTString());
 			lineChartTemperatureValues.push((+item[1] / 100).toFixed(1));
+			lineChartHeatIndexValues.push((+item[6] / 100).toFixed(1));
 			lineChartHumidityValues.push((+item[2] / 100).toFixed(1));
 			lineChartBatteryVoltageValues.push((+item[3] / 1000).toFixed(3));
 			lineChartEsp32TemperatureValues.push((+item[4] / 100).toFixed(1));
@@ -49,7 +51,7 @@
 		var lineChartTemperatureData = {
 			labels: lineChartLabels,
 			datasets: [{
-				label: 'DHT22',
+				label: 'DHT22-T',
 				data: lineChartTemperatureValues,
 				fill: false,
 				borderColor: chartColors[0],
@@ -57,8 +59,8 @@
 				showLine: true,
 			},
 			{
-				label: 'ESP32',
-				data: lineChartEsp32TemperatureValues,
+				label: 'DHT22-HI',
+				data: lineChartHeatIndexValues,
 				fill: false,
 				borderColor: chartColors[3],
 				tension: 0.1,
@@ -243,11 +245,11 @@
 			labels: lineChartLabels,
 			datasets: [{
 				label: 'Temperature',
-				data: lineChartEsp32DeltaTemperatureValues,
+				data: lineChartEsp32TemperatureValues,
 				fill: false,
 				borderColor: chartColors[0],
 				tension: 0.1,
-				showLine: false,
+				showLine: true,
 			}],
 		};
 
@@ -270,7 +272,7 @@
 		document.getElementById("temperature").innerText = lineChartTemperatureValues[lineChartTemperatureValues.length - 1];
 		document.getElementById("humidity").innerText = lineChartHumidityValues[lineChartHumidityValues.length - 1];
 		document.getElementById("batteryVoltage").innerText = lineChartBatteryVoltageValues[lineChartBatteryVoltageValues.length - 1];
-		document.getElementById("esp32Temperature").innerText = lineChartEsp32DeltaTemperatureValues[lineChartEsp32DeltaTemperatureValues.length - 1];
+		document.getElementById("esp32Temperature").innerText = lineChartEsp32TemperatureValues[lineChartEsp32TemperatureValues.length - 1];
 
 		var startTime = performance.now()
 		var arr = maxMinAvg(lineChartEsp32DeltaTemperatureValues);
@@ -367,6 +369,10 @@
 	 * Converts milliseconds to (D day(s), HH:MM:SS.s) format
 	 */
 	function msToTime(millis, noLeadingZeroes = false) {
+		if (isNaN(millis)) {
+			return "-"
+		}
+
 		var milliseconds = Math.floor((millis % 1000) / 100),
 			seconds = Math.floor((millis / 1000) % 60),
 			minutes = Math.floor((millis / (1000 * 60)) % 60),
@@ -403,8 +409,14 @@
 		var sum = parseFloat(arr[0]);
 		var indexMax = 0;
 		var indexMin = 0;
+		//console.log(arr.length);
+		//console.log(arr);
 		for (var i = 1; i < arr.length; i++) {
-			let value = parseFloat(arr[i])
+			let value = parseFloat(arr[i]);
+			if (isNaN(value)) {
+				continue;
+			}
+			//console.log(value);
 			if (value > max) {
 				max = value;
 				indexMax = i;

@@ -20,7 +20,7 @@
 		<h1 style="display: inline">ESP32 Datalogger</h1>
 
 		<a id="next" class="next round" style="float:right" onClick="slide('next')">&#8250;</a>
-		<div id="info-version">2024 - v1.04-beta</div>
+		<div id="info-version">2024 - v1.05-beta</div>
 	</div>
 
 	<div id="feedback" style="margin-top: 25vh">
@@ -260,9 +260,8 @@
 						<table id="esp32Temperature-info" style="color:#059e8a;">
 							<tr>
 								<td>
-									<span>&#8796;</span> <i class="fas fa-thermometer-half fa-1x"
-										aria-hidden="true"></i>
-									<span class="dht-labels">ESP32 v DHT22</span>
+									<i class="fas fa-thermometer-half fa-1x" aria-hidden="true"></i>
+									<span class="dht-labels">ESP32</span>
 								</td>
 								<td>
 									<span id="esp32Temperature">?</span>
@@ -270,6 +269,14 @@
 								</td>
 								<td>
 									<table id="esp32Temperature-stats">
+										<tr>
+											<td>
+												<span>&#8796;</span>
+											</td>
+											<td colspan="2" style="font-size: 15px;">
+												<div>DHT22-T</div>
+											</td>
+										</tr>
 										<tr>
 											<td style="font-size: 15px;">avg.</td>
 											<td style="font-size: 15px;">
