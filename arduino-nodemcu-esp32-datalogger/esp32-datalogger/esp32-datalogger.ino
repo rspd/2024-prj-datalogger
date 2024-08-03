@@ -68,7 +68,13 @@ static void	initSensor();
 static void readBatteryVoltage();
 
 // check wifi status
-static bool checkWiFi();
+static bool wifiConnected();
+
+// get epoch time,  it could take up-to five seconds because of getLocalTime()
+static unsigned long getStartEpochTime();
+
+// function that gets current epoch time
+static unsigned long getTime();
 
 // connect to wifi
 static bool connectToWiFi();
@@ -78,9 +84,6 @@ static void initGSheet();
 
 // read sensor values
 static void readSensor();
-
-// function that gets current epoch time
-static unsigned long getTime();
 
 // append sensor values to google sheet
 static bool appendSensorValuesToGSheet();
@@ -101,7 +104,7 @@ enum Constants
 	SHORT_MILLIS_DELAY = 10UL,
 	HALF_SECOND_DELAY = 500UL,
 	ONE_SECOND_DELAY = 1000UL,
-	WORK_MILLIS_TIMEOUT = 15000UL,
+	WORK_MILLIS_TIMEOUT = 30000UL,
 };
 
 typedef enum
@@ -132,6 +135,7 @@ unsigned long utilTimeStamp;
 
 // sensor variables
 float temperature = 0.0;
+float heatIndex = 0.0;
 float humidity = 0.0;
 float esp32Temperature = 0.0;
 int battMillivolts = 0;
@@ -140,19 +144,21 @@ int battMillivolts = 0;
 const char *ntpServer = "pool.ntp.org";
 
 // esp32-datalogger version
-const char *VERSION = "1.0.4-beta";
+const char *VERSION = "1.0.5-beta";
 
 // main machine state variable
 state_t state;
 
 // buffers used when no wifi connection (SRAM RTC SLOW MEMORY)
 RTC_DATA_ATTR static int temperatureBuffer[BUFFER_MAX_SIZE];
+RTC_DATA_ATTR static int heatIndexBuffer[BUFFER_MAX_SIZE];
 RTC_DATA_ATTR static int humidityBuffer[BUFFER_MAX_SIZE];
 RTC_DATA_ATTR static int esp32TemperatureBuffer[BUFFER_MAX_SIZE];
 RTC_DATA_ATTR static int battVoltsBuffer[BUFFER_MAX_SIZE];
 RTC_DATA_ATTR static unsigned int esp32WorkTimeBuffer[BUFFER_MAX_SIZE];
 RTC_DATA_ATTR unsigned char rdBufferIdx = 0;
 RTC_DATA_ATTR unsigned char wrBufferIdx = 0; // index to write next value
+RTC_DATA_ATTR unsigned char noWifiCycles = 0;
 
 // initialize DHT sensor
 DHT dht(DHTPIN, DHTTYPE);
@@ -161,11 +167,6 @@ void setup()
 {
 	// turn all onboard LEDs off
 	TURN_OFF_ALL_ESP32_LEDs();
-
-	// Get timestamp
-	// note: first time shall fail returning zero
-	// and shall be set again after wifi connection
-	epochTimeNow = getTime();
 
 	// sensor data pin needs a pullup
 	DHT_DATA_PULLUP();
@@ -185,16 +186,16 @@ void setup()
 	{
 		wrBufferIdx = wrBufferIdx % BUFFER_MAX_SIZE;
 	}
-
+	if (noWifiCycles)
+	{
+		noWifiCycles = (noWifiCycles - 1) % NO_WIFI_CYCLES_MAX;
+	}
 	// next state
 	state = STATE_POWER_ON;
 }
 
 void loop()
 {
-	// call ready() repeatedly in loop for authentication checking and processing
-	const bool ready = GSheet.ready();
-
 	switch (state)
 	{
 		case STATE_POWER_ON:
@@ -213,7 +214,7 @@ void loop()
 
 		case STATE_READ_SENSOR:
 			readSensor();
-			state = STATE_CONNECT_WIFI;
+			state = (noWifiCycles) ? STATE_STORE_DATA : STATE_CONNECT_WIFI;
 			break;
 
 		case STATE_CONNECT_WIFI:
@@ -226,14 +227,6 @@ void loop()
 			break;
 
 		case STATE_APPEND_GSHEET:
-			if (!ready)
-			{
-				if (millis() > WORK_MILLIS_TIMEOUT)
-				{
-					state = STATE_STORE_DATA;
-				}
-				break;
-			}
 			appendSensorValuesToGSheet();
 			state = STATE_ENTER_DEEP_SLEEP;
 			break;
@@ -264,16 +257,6 @@ static void	initSensor()
 {
 	// initialize DHT sensor
 	dht.begin();
-	while (1)
-	{
-		delay(HALF_SECOND_DELAY);
-		if (dht.readTemperature() != NAN)
-		{
-			break;
-		}
-		DBGOUT(Serial.print, millis());
-		DBGOUT(Serial.println, " check DHT wiring?");
-	};
 }
 
 static void readBatteryVoltage()
@@ -285,7 +268,7 @@ static void readBatteryVoltage()
 		//battVolts += analogRead(ANALOG_BATT_GPIO) * ((RESISTOR_R1 + RESISTOR_R2)/RESISTOR_R2); // R1=(75K+5,7K), R2=100K
 		battMillivolts += analogReadMilliVolts(ANALOG_BATT_GPIO);
 	}
-	/*
+	/* #####################################
 	 calculate averaged battery voltage
 	     + <----
 	            |
@@ -294,7 +277,7 @@ static void readBatteryVoltage()
 	 (6V max)  |R2|         (3V3 max)
 	            |
 	     - <------------>     GND
-	*/
+	   ##################################### */
 	battMillivolts = (battMillivolts/MAX_RETRY_COUNT) * ((RESISTOR_R1 + RESISTOR_R2)/RESISTOR_R2);
 	DBGOUT(Serial.print, millis());
 	DBGOUT(Serial.print, " battery ");
@@ -302,15 +285,42 @@ static void readBatteryVoltage()
 	DBGOUT(Serial.println, "V");
 }
 
-static bool checkWiFi()
+static bool wifiConnected()
 {
 	return (WiFi.status() == WL_CONNECTED);
 }
 
+static unsigned long getStartEpochTime()
+{
+	unsigned long epochTime = getTime();
+	if (epochTime)
+	{
+		// Get start timestamp
+		epochTime -= (millis()/1000);
+	}
+	return epochTime;
+}
+
+static unsigned long getTime()
+{
+	time_t now;
+	struct tm timeinfo;
+	if (!getLocalTime(&timeinfo))
+	{
+		DBGOUT(Serial.println, "Failed to obtain time");
+		return (0);
+	}
+	time(&now);
+	return now;
+}
+
 static bool connectToWiFi()
 {
-	if (checkWiFi())
+	if (wifiConnected())
 	{
+		// Get start timestamp
+		epochTimeNow = getStartEpochTime();
+
 		// just return if wifi connected
 		// note: test purposes as on wakeup the wifi is always disconnected
 		return true;
@@ -330,20 +340,18 @@ static bool connectToWiFi()
 		++cnt;
 		if (cnt >= RECONNECT_WIFI_TIMES_MAX)
 		{
+			noWifiCycles = NO_WIFI_CYCLES_MAX;
 			DBGOUT(Serial.print, millis());
 			DBGOUT(Serial.println, " failed to connect to wifi...");
 			return false;
 		}
-	} while (!checkWiFi());
+	} while (!wifiConnected());
 
 	// configure time
 	configTime(0, 0, ntpServer);
 
-	if (epochTimeNow == 0)
-	{
-		delay(SHORT_MILLIS_DELAY);
-		epochTimeNow = getTime();
-	}
+	// Get start timestamp
+	epochTimeNow = getStartEpochTime();
 
 	// esp32's IP address
 	DBGOUT(Serial.print, millis());
@@ -382,8 +390,9 @@ void tokenStatusCallback(TokenInfo info)
 
 static void readSensor()
 {
-	float h;
 	float t;
+	float hic;
+	float h;
 	float espT;
 	unsigned char retryCnt = 0;
 
@@ -391,19 +400,20 @@ static void readSensor()
 	DBGOUT(Serial.println, "-----------------");
 
 	do {
-		bool ok = true;
-
 		// temperature or humidity read takes about 250ms!
 		h = dht.readHumidity();
 
 		// read temperature as Celsius (default)
 		t = dht.readTemperature();
 
+		// compute heat index in Celsius (isFahreheit = false)
+		hic = dht.computeHeatIndex(t, h, false);
+
 		// read internal esp32 temperature sensor
 		espT = temperatureRead();
 
 		// check if any read failed and exit early without update
-		if (isnan(h) || isnan(t) || isnan(espT))
+		if (isnan(h) || isnan(t) || isnan(espT) || isnan(hic))
 		{
 			++retryCnt;
 			if (retryCnt > MAX_RETRY_COUNT)
@@ -414,39 +424,27 @@ static void readSensor()
 		}
 		else
 		{
+			// all sensors successfully read
 			break;
 		}
 	} while (true);
 
 	// update humidity and temperature values
-	humidity = h;
 	temperature = t;
+	heatIndex = hic;
+	humidity = h;
 	esp32Temperature = espT;
-
-	// compute heat index in Celsius (isFahreheit = false)
-	float hic = dht.computeHeatIndex(temperature, humidity, false);
 
 	DBGOUT(Serial.print, millis());
 	DBGOUT(Serial.print, F(" H: "));
 	DBGOUT(Serial.print, humidity);
 	DBGOUT(Serial.print, F("%  T: "));
 	DBGOUT(Serial.print, temperature);
-	DBGOUT(Serial.print, F("C  (heat index: "));
-	DBGOUT(Serial.print, hic);
-	DBGOUT(Serial.println, F("C)"));
-}
-
-static unsigned long getTime()
-{
-	time_t now;
-	struct tm timeinfo;
-	if (!getLocalTime(&timeinfo))
-	{
-		DBGOUT(Serial.println, "Failed to obtain time");
-		return (0);
-	}
-	time(&now);
-	return now;
+	DBGOUT(Serial.print, F("C (HI: "));
+	DBGOUT(Serial.print, heatIndex);
+	DBGOUT(Serial.print, F("C  Tesp32: "));
+	DBGOUT(Serial.print, esp32Temperature);
+	DBGOUT(Serial.println, F("C"));
 }
 
 static bool appendSensorValuesToGSheet(void)
@@ -472,6 +470,25 @@ static bool appendSensorValuesToGSheet(void)
 
 	do
 	{
+		if (!wifiConnected())
+		{
+			// no wifi, terminate here
+			break;
+		}
+
+		if (millis() > WORK_MILLIS_TIMEOUT)
+		{
+			// timeout, terminate here
+			break;
+		}
+
+		// call ready() repeatedly in loop for authentication checking and processing
+		if (!GSheet.ready())
+		{
+			// until ready ...
+			continue;
+		}
+
 		valueRange.add("majorDimension", "COLUMNS");
 		if (rdBufferIdx != wrBufferIdx)
 		{
@@ -487,6 +504,7 @@ static bool appendSensorValuesToGSheet(void)
 			valueRange.set("values/[3]/[0]", battVoltsBuffer[rdBufferIdx]);
 			valueRange.set("values/[4]/[0]", esp32TemperatureBuffer[rdBufferIdx]);
 			valueRange.set("values/[5]/[0]", esp32WorkTimeBuffer[rdBufferIdx]);
+			valueRange.set("values/[6]/[0]", heatIndexBuffer[rdBufferIdx]);
 		}
 		else
 		{
@@ -498,6 +516,7 @@ static bool appendSensorValuesToGSheet(void)
 			valueRange.set("values/[4]/[0]", (int) (esp32Temperature * CENTI_CONVERSION_FACTOR));
 			/* add 2ms, measured max. time from here until calling esp_deep_sleep_start() */
 			valueRange.set("values/[5]/[0]", (unsigned int) millis() + 2);
+			valueRange.set("values/[6]/[0]", (int) (heatIndex * CENTI_CONVERSION_FACTOR));
 		}
 
 		// for google sheet API ref doc, go to https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append
@@ -526,6 +545,7 @@ static bool appendSensorValuesToGSheet(void)
 			++gsheetErrCnt;
 			DBGOUT(Serial.println, GSheet.errorReason());
 		}
+
 	} while (gsheetErrCnt < MAX_GSHEET_RETRY_COUNT);
 
 	DBGOUT(Serial.println, "");
@@ -541,27 +561,30 @@ static void storeData()
 	humidityBuffer[wrBufferIdx] = (int) (humidity * CENTI_CONVERSION_FACTOR);
 	battVoltsBuffer[wrBufferIdx] = (int) battMillivolts;
 	esp32TemperatureBuffer[wrBufferIdx] = (int) (esp32Temperature * CENTI_CONVERSION_FACTOR);
+	heatIndexBuffer[wrBufferIdx] = (int) (heatIndex * CENTI_CONVERSION_FACTOR);
 	esp32WorkTimeBuffer[wrBufferIdx] = (unsigned int) millis();
 	wrBufferIdx = (wrBufferIdx + 1) % BUFFER_MAX_SIZE;
 }
 
 static void enterDeepSleepNow()
 {
-	DBGOUT(Serial.print, millis());
-	DBGOUT(Serial.print, " ESP32 will wake up again in about ");
-	DBGOUT(Serial.print, String(TIME_IN_DEEP_SLEEP*1000UL - millis()));
-	DBGOUT(Serial.println, "ms");
-	DBGFLUSH();
-
-	// save working time, configure the wake up source and set time to sleep
-	const unsigned long elapsedMillis = millis();
-	const uint64_t elapsedMicroseconds = elapsedMillis * 1000ULL;
 	#ifndef DEBUG
+		DBGOUT(Serial.print, millis());
+		DBGOUT(Serial.print, " ESP32 will wake up again in about ");
+		DBGOUT(Serial.print, String(TIME_IN_DEEP_SLEEP*1000UL - millis()));
+		DBGOUT(Serial.println, "ms");
+		DBGFLUSH();
+
+		// save working time, configure the wake up source and set time to sleep
+		const unsigned long elapsedMillis = millis();
+		const uint64_t elapsedMicroseconds = elapsedMillis * 1000ULL;
+
 		esp_sleep_enable_timer_wakeup(MICROSECS_IN_DEEP_SLEEP - elapsedMicroseconds);
 		esp_deep_sleep_start();
 	#else
 		// only debug purposes
-		delay(10000);
+		DBGOUT(Serial.println, " ESP32 will wake up again in about five seconds");
+		delay(5000);
 		epochTimeNow = getTime();
 		state = STATE_CHECK_BATTVOLTAGE;
 	#endif

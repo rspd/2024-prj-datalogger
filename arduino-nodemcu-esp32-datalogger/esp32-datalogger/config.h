@@ -34,6 +34,10 @@
 
 #define RECONNECT_WIFI_TIMES_MAX 10UL
 
+// do not connect wifi for at least NO_WIFI_CYCLES_MAX (after wifi disconnection)
+// maximum time until next wifi connection is NO_WIFI_CYCLES_MAX * TIME_IN_DEEP_SLEEP
+#define NO_WIFI_CYCLES_MAX 6UL
+
 ///////////////////////////////////////////////////////////////////////////////
 /// ESP32 target configuration
 //#define NODEMCU_ESP32_JOYIT
@@ -87,7 +91,7 @@
 /// ESP32 wake up configuration
 
 #ifdef DEBUG
-#define TIME_IN_DEEP_SLEEP 60
+#define TIME_IN_DEEP_SLEEP 30
 #else
 #define TIME_IN_DEEP_SLEEP 600   /* Time ESP32 will go to sleep (in seconds)   */
 #endif
