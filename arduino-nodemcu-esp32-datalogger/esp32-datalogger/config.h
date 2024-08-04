@@ -8,15 +8,38 @@
 #ifdef DEBUG
 #define DBGOUT_INIT() do { \
 	Serial.begin(115200);  \
-	Serial.println();      \
-	Serial.println();      \
+	while (!Serial)        \
+	{                      \
+		delay(10);         \
+		_NOP();            \
+	}                      \
+	delay(1000);           \
+	Serial.println("");    \
+	Serial.println("");    \
 } while (0)
 #define DBGOUT(function, ...)  (function)(__VA_ARGS__)
 #define DBGFLUSH() Serial.flush()
+#define DBGOUT_PRINT_START() do {         \
+	printWakeupReason();                  \
+	uint32_t Freq = getCpuFrequencyMhz(); \
+	Serial.print("CPU Freq = ");          \
+	Serial.print(Freq);                   \
+	Serial.println(" MHz");               \
+	Freq = getXtalFrequencyMhz();         \
+	Serial.print("XTAL Freq = ");         \
+	Serial.print(Freq);                   \
+	Serial.println(" MHz");               \
+	Freq = getApbFrequency();             \
+	Serial.print("APB Freq = ");          \
+	Serial.print(Freq);                   \
+	Serial.println(" Hz");                \
+} while (0)
+
 #else
 #define DBGOUT_INIT()
 #define DBGOUT(function, ...)
 #define DBGFLUSH()
+#define DBGOUT_PRINT_START()
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -56,7 +79,7 @@
 #endif /* NODEMCU_ESP32_JOYIT */
 
 #ifdef ESP32_NANO_S3_WAVESHARE
-#define ANALOG_BATT_GPIO 1
+#define ANALOG_BATT_GPIO A0
 #define DHTPIN           5
 #define TURN_OFF_ALL_ESP32_LEDs() do {   \
 		pinMode(LED_BUILTIN, OUTPUT);    \

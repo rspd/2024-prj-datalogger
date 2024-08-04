@@ -48,6 +48,10 @@
  * - https://dronebotworkshop.com/nano-esp32/
  * ESP32-S3-Nano
  * - https://www.waveshare.com/wiki/ESP32-S3-Nano
+ * ESP32 Change CPU Speed (Clock Frequency)
+ * - https://deepbluembedded.com/esp32-change-cpu-speed-clock-frequency/
+ * Cautions In Using ESP32 ADC - Makerfabs
+ * - https://www.makerfabs.com/blog/post/cautions-in-using-esp32-adc-makerfabs-2
  */
 
 #include <Arduino.h>
@@ -174,8 +178,8 @@ void setup()
 	// starts serial interface
 	DBGOUT_INIT();
 
-	// print the wakeup reason for ESP32
-	printWakeupReason();
+	// some prints at startup
+	DBGOUT_PRINT_START();
 
 	// check indexes consistency
 	if (rdBufferIdx >= BUFFER_MAX_SIZE)
@@ -190,6 +194,10 @@ void setup()
 	{
 		noWifiCycles = (noWifiCycles - 1) % NO_WIFI_CYCLES_MAX;
 	}
+
+	//set the resolution to 12 bits (0-4095)
+	analogReadResolution(12);
+
 	// next state
 	state = STATE_POWER_ON;
 }
@@ -261,6 +269,9 @@ static void	initSensor()
 
 static void readBatteryVoltage()
 {
+	DBGOUT(Serial.println, "\nBattery voltage...");
+	DBGOUT(Serial.println, "------------------");
+
 	battMillivolts = 0;
 	for (uint8_t i=0; i<MAX_RETRY_COUNT; i++)
 	{
@@ -278,11 +289,15 @@ static void readBatteryVoltage()
 	            |
 	     - <------------>     GND
 	   ##################################### */
-	battMillivolts = (battMillivolts/MAX_RETRY_COUNT) * ((RESISTOR_R1 + RESISTOR_R2)/RESISTOR_R2);
+	battMillivolts = (battMillivolts/MAX_RETRY_COUNT);
 	DBGOUT(Serial.print, millis());
-	DBGOUT(Serial.print, " battery ");
+	DBGOUT(Serial.print, " GPIO:");
 	DBGOUT(Serial.print, battMillivolts);
-	DBGOUT(Serial.println, "V");
+	DBGOUT(Serial.print, "mV, ");
+	battMillivolts = battMillivolts * ((RESISTOR_R1 + RESISTOR_R2)/RESISTOR_R2);
+	DBGOUT(Serial.print, " battery:");
+	DBGOUT(Serial.print, battMillivolts);
+	DBGOUT(Serial.println, "mV");
 }
 
 static bool wifiConnected()
@@ -440,7 +455,7 @@ static void readSensor()
 	DBGOUT(Serial.print, humidity);
 	DBGOUT(Serial.print, F("%  T: "));
 	DBGOUT(Serial.print, temperature);
-	DBGOUT(Serial.print, F("C (HI: "));
+	DBGOUT(Serial.print, F("C HI: "));
 	DBGOUT(Serial.print, heatIndex);
 	DBGOUT(Serial.print, F("C  Tesp32: "));
 	DBGOUT(Serial.print, esp32Temperature);
@@ -583,8 +598,8 @@ static void enterDeepSleepNow()
 		esp_deep_sleep_start();
 	#else
 		// only debug purposes
-		DBGOUT(Serial.println, " ESP32 will wake up again in about five seconds");
-		delay(5000);
+		DBGOUT(Serial.println, " ESP32 will wake up again in about ten seconds\n");
+		delay(10000);
 		epochTimeNow = getTime();
 		state = STATE_CHECK_BATTVOLTAGE;
 	#endif
