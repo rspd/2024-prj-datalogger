@@ -15,12 +15,10 @@
 <body>
 
 	<div class="header">
-		<a id="previous" class="previous round" style="float:left" onClick="slide('prev')">&#8249;</a>
-
-		<h1 style="display: inline">ESP32 Datalogger</h1>
-
-		<a id="next" class="next round" style="float:right" onClick="slide('next')">&#8250;</a>
-		<div id="info-version">2024 - v1.05-beta</div>
+		<a id="previous" class="previous round" onClick="slide('prev')">&#8249;</a>
+		<h1>ESP32 Datalogger</h1>
+		<a id="next" class="next round" onClick="slide('next')">&#8250;</a>
+		<div id="info-version">2024 - v1.06-beta</div>
 	</div>
 
 	<div id="feedback" style="margin-top: 25vh">
@@ -30,49 +28,47 @@
 		</center>
 	</div>
 
-	<form style="margin-bottom: 1vh" id="hidden-header-form" style="visibility=hidden">
+	<form id="hidden-header-form">
 		<center>
-			<table id="esp32WorkTime-info" style="color:#6495ed;">
+			<table id="esp32WorkTime-info">
 				<tr>
-					<td colspan="3" style="text-align: center; padding-bottom:15px">
-						<div id="info" style="font-size:15px">?</div>
+					<td colspan="4" style="padding-bottom:15px; text-align:center">
+						<div id="info">?</div>
 					</td>
 				</tr>
 				<tr>
-					<td colspan="2" style="font-size: 15px">
-						<center class="date-last-measurement">
-							?
-						</center>
+					<td colspan="3">
+						<center class="date-last-measurement">?</center>
 					</td>
-					<td class="date-start-measurement" class="right" style="font-size:15px">
-						?
-					</td>
+					<td class="date-start-measurement">?</td>
 				</tr>
 				<tr>
 					<td>
-						<i class="fas fa-regular fa-moon" aria-hidden="true"></i>
+						<i class="fas fa-regular fa-moon fa-3x" aria-hidden="true"></i>
+					</td>
+					<td>
 						<span class="dht-labels">Sleep time</span>
 					</td>
-					<td style="text-align:left">
+					<td>
 						<span class="dht-labels" id="esp32SleepTime">?</span>
 					</td>
 					<td>
 						<table id="esp32SleepTime-stats">
 							<tr>
-								<td style="font-size: 15px;">avg.</td>
-								<td style="font-size: 15px;">
+								<td>avg.</td>
+								<td>
 									<span id="esp32SleepTime-avg">?</span>
 								</td>
 							</tr>
 							<tr>
-								<td style="font-size: 15px;">max</td>
-								<td style="font-size: 15px;">
+								<td>max</td>
+								<td>
 									<span id="esp32SleepTime-max">?</span>
 								</td>
 							</tr>
 							<tr>
-								<td style="font-size: 15px;">min</td>
-								<td style="font-size: 15px;">
+								<td>min</td>
+								<td>
 									<span id="esp32SleepTime-min">?</span>
 								</td>
 							</tr>
@@ -81,31 +77,33 @@
 				</tr>
 				<tr>
 					<td>
-						<i class="fas fa-regular fa-clock" aria-hidden="true"></i>
+						<i class="fas fa-regular fa-clock fa-3x" aria-hidden="true"></i>
+					</td>
+					<td>
 						<span class="dht-labels">Work time</span>
 					</td>
-					<td style="text-align:left">
+					<td style="text-align:center">
 						<span class="dht-labels" id="esp32WorkTime">?</span>
 					</td>
 					<td>
 						<table id="esp32WorkTime-stats">
 							<tr>
-								<td style="font-size: 15px;">avg.</td>
-								<td style="font-size: 15px;">
+								<td>avg.</td>
+								<td>
 									<span id="esp32WorkTime-avg">?</span>
 									<span>ms</span>
 								</td>
 							</tr>
 							<tr>
-								<td style="font-size: 15px;">max</td>
-								<td style="font-size: 15px;">
+								<td>max</td>
+								<td>
 									<span id="esp32WorkTime-max">?</span>
 									<span>ms</span>
 								</td>
 							</tr>
 							<tr>
-								<td style="font-size: 15px;">min</td>
-								<td style="font-size: 15px;">
+								<td>min</td>
+								<td>
 									<span id="esp32WorkTime-min">?</span>
 									<span>ms</span>
 								</td>
@@ -120,37 +118,39 @@
 	<div class="container">
 		<div class="pages">
 			<div class="page one">
-				<form id="hidden-upper-form" style="visibility=hidden">
+				<form id="hidden-upper-form">
 					<center>
-						<table id="temperature-info" style="color:#059e8a;">
+						<table id="temperature-info">
 							<tr>
 								<td>
-									<i class="fas fa-thermometer-half fa-1x" aria-hidden="true"></i>
+									<i class="fas fa-thermometer-half fa-3x" aria-hidden="true"></i>
+								</td>
+								<td>
 									<span class="dht-labels">Temperature</span>
 								</td>
 								<td>
-									<span id="temperature">?</span>
+									<span id="temperature" class="dht-labels greater">?</span>
 									<span>&deg;C</span>
 								</td>
 								<td>
 									<table id="temperature-stats">
 										<tr>
-											<td style="font-size: 15px;">avg.</td>
-											<td style="font-size: 15px;">
+											<td>avg.</td>
+											<td>
 												<span id="temperature-avg">?</span>
 												<span>&deg;c</span>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">max</td>
-											<td style="font-size: 15px;">
+											<td>max</td>
+											<td>
 												<span id="temperature-max">?</span>
 												<span>&deg;c</span>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">min</td>
-											<td style="font-size: 15px;">
+											<td>min</td>
+											<td>
 												<span id="temperature-min">?</span>
 												<span>&deg;c</span>
 											</td>
@@ -159,42 +159,44 @@
 								</td>
 							</tr>
 						</table>
-						<div style="width: auto; height: auto;">
+						<div>
 							<canvas id="lineChartTemperature" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
 				</form>
-				<form id="hidden-lower-form" style="margin-top: 1vh">
+				<form id="hidden-lower-form">
 					<center>
-						<table id="humidity-info" style="color:#00add6;">
+						<table id="humidity-info">
 							<tr>
 								<td>
-									<i class="fas fa-tint fa-1x"></i>
+									<i class="fas fa-tint fa-3x"></i>
+								</td>
+								<td>
 									<span class="dht-labels">Humidity</span>
 								</td>
 								<td>
-									<span id="humidity">?</span>
+									<span id="humidity" class="dht-labels greater">?</span>
 									<span>&percnt;</span>
 								</td>
 								<td>
 									<table id="humidity-stats">
 										<tr>
-											<td style="font-size: 15px;">avg.</td>
-											<td style="font-size: 15px;">
+											<td>avg.</td>
+											<td>
 												<span id="humidity-avg">?</span>
 												<span>&percnt;</span>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">max</td>
-											<td style="font-size: 15px;">
+											<td>max</td>
+											<td>
 												<span id="humidity-max">?</span>
 												<span>&percnt;</span>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">min</td>
-											<td style="font-size: 15px;">
+											<td>min</td>
+											<td>
 												<span id="humidity-min">?</span>
 												<span>&percnt;</span>
 											</td>
@@ -203,7 +205,7 @@
 								</td>
 							</tr>
 						</table>
-						<div style="width: auto; height: auto;">
+						<div>
 							<canvas id="lineChartHumidity" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
@@ -213,35 +215,37 @@
 			<div class="page two">
 				<form>
 					<center>
-						<table id="batteryVoltage-info" style="color:#e69500;">
+						<table id="batteryVoltage-info">
 							<tr>
 								<td>
-									<i class="fas fa-battery-half fa-1x fa-rotate-270" aria-hidden="true"></i>
+									<i class="fas fa-battery-half fa-3x fa-rotate-270" aria-hidden="true"></i>
+								</td>
+								<td>
 									<span class="dht-labels">Battery Voltage</span>
 								</td>
 								<td>
-									<span id="batteryVoltage">?</span>
+									<span id="batteryVoltage" class="dht-labels greater">?</span>
 									<span>V</span>
 								</td>
 								<td>
 									<table id="batteryVoltage-stats">
 										<tr>
-											<td style="font-size: 15px;">avg.</td>
-											<td style="font-size: 15px;">
+											<td>avg.</td>
+											<td>
 												<span id="batteryVoltage-avg">?</span>
 												<span>V</span>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">max</td>
-											<td style="font-size: 15px;">
+											<td>max</td>
+											<td>
 												<span id="batteryVoltage-max">?</span>
 												<span>V</span>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">min</td>
-											<td style="font-size: 15px;">
+											<td>min</td>
+											<td>
 												<span id="batteryVoltage-min">?</span>
 												<span>V</span>
 											</td>
@@ -250,50 +254,50 @@
 								</td>
 							</tr>
 						</table>
-						<div style="width: auto; height: auto;">
+						<div>
 							<canvas id="lineChartBatteryVoltage" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
 				</form>
-				<form style="margin-top: 1vh">
+				<form>
 					<center>
-						<table id="esp32Temperature-info" style="color:#059e8a;">
+						<table id="esp32Temperature-info">
 							<tr>
 								<td>
-									<i class="fas fa-thermometer-half fa-1x" aria-hidden="true"></i>
+									<i class="fas fa-thermometer-half fa-3x" aria-hidden="true"></i>
+								</td>
+								<td>
 									<span class="dht-labels">ESP32</span>
 								</td>
 								<td>
-									<span id="esp32Temperature">?</span>
+									<span id="esp32Temperature" class="dht-labels greater">?</span>
 									<span>&deg;C</span>
 								</td>
 								<td>
 									<table id="esp32Temperature-stats">
 										<tr>
-											<td>
-												<span>&#8796;</span>
-											</td>
+											<td><span style="font-size:3vh">&#8796;</span></td>
 											<td colspan="2" style="font-size: 15px;">
 												<div>DHT22-T</div>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">avg.</td>
-											<td style="font-size: 15px;">
+											<td>avg.</td>
+											<td>
 												<span id="esp32Temperature-avg">?</span>
 												<span>&deg;c</span>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">max</td>
-											<td style="font-size: 15px;">
+											<td>max</td>
+											<td>
 												<span id="esp32Temperature-max">?</span>
 												<span>&deg;c</span>
 											</td>
 										</tr>
 										<tr>
-											<td style="font-size: 15px;">min</td>
-											<td style="font-size: 15px;">
+											<td>min</td>
+											<td>
 												<span id="esp32Temperature-min">?</span>
 												<span>&deg;c</span>
 											</td>
@@ -302,7 +306,7 @@
 								</td>
 							</tr>
 						</table>
-						<div style="width: auto; height: auto;">
+						<div>
 							<canvas id="lineChartEsp32Temperature" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
