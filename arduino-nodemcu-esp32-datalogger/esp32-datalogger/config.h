@@ -17,7 +17,8 @@
 	Serial.println("");    \
 	Serial.println("");    \
 } while (0)
-#define DBGOUT(function, ...)  (function)(__VA_ARGS__)
+#define DBGOUT_TS(fmt, ...) (Serial.printf("%09llu: " fmt, getTimestamp(), ##__VA_ARGS__))
+#define DBGOUT(fmt, ...) (Serial.printf("%09llu: " fmt, ##__VA_ARGS__))
 #define DBGFLUSH() Serial.flush()
 #define DBGOUT_PRINT_START() do {         \
 	printWakeupReason();                  \
@@ -37,7 +38,8 @@
 
 #else
 #define DBGOUT_INIT()
-#define DBGOUT(function, ...)
+#define DBGOUT_TS(...)
+#define DBGOUT(...)
 #define DBGFLUSH()
 #define DBGOUT_PRINT_START()
 #endif

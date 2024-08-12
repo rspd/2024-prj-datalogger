@@ -57,10 +57,29 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <DHT.h>
+#include <bsec.h>
 #include "time.h"
 #include "defines.h" // see defines.h.template
 #include "config.h"
 #include <ESP_Google_Sheet_Client.h>
+
+
+/* Configure the BSEC library with information about the sensor
+    18v/33v = Voltage at Vdd. 1.8V or 3.3V
+    3s/300s = BSEC operating mode, BSEC_SAMPLE_RATE_LP or BSEC_SAMPLE_RATE_ULP
+    4d/28d = Operating age of the sensor in days
+    generic_18v_3s_4d
+    generic_18v_3s_28d
+    generic_18v_300s_4d
+    generic_18v_300s_28d
+    generic_33v_3s_4d
+    generic_33v_3s_28d
+    generic_33v_300s_4d
+    generic_33v_300s_28d
+*/
+const uint8_t bsec_config_iaq[] = {
+#include "config/generic_33v_300s_4d/bsec_iaq.txt"
+};
 
 // for SD/SD_MMC mounting helper
 #include <GS_SDHelper.h>
@@ -100,6 +119,9 @@ static void enterDeepSleepNow();
 
 // method to print the reason by which esp32 has been awaken from sleep
 static void printWakeupReason();
+
+// get timestamp
+static int64_t getTimestamp();
 
 enum Constants
 {
@@ -166,6 +188,9 @@ RTC_DATA_ATTR unsigned char noWifiCycles = 0;
 
 // initialize DHT sensor
 DHT dht(DHTPIN, DHTTYPE);
+
+// initialize bme680 sensor
+Bsec bme680;
 
 void setup()
 {
@@ -254,8 +279,7 @@ void loop()
 
 		case STATE_ERROR:
 		default:
-			DBGOUT(Serial.print, millis());
-			DBGOUT(Serial.println, " error state");
+			DBGOUT_TS("error state\n");
 			state = STATE_ENTER_DEEP_SLEEP;
 			break;
 	}
@@ -269,8 +293,8 @@ static void	initSensor()
 
 static void readBatteryVoltage()
 {
-	DBGOUT(Serial.println, "\nBattery voltage...");
-	DBGOUT(Serial.println, "------------------");
+	DBGOUT("\nBattery voltage...\n");
+	DBGOUT("------------------\n");
 
 	battMillivolts = 0;
 	for (uint8_t i=0; i<MAX_RETRY_COUNT; i++)
@@ -290,14 +314,9 @@ static void readBatteryVoltage()
 	     - <------------>     GND
 	   ##################################### */
 	battMillivolts = (battMillivolts/MAX_RETRY_COUNT);
-	DBGOUT(Serial.print, millis());
-	DBGOUT(Serial.print, " GPIO:");
-	DBGOUT(Serial.print, battMillivolts);
-	DBGOUT(Serial.print, "mV, ");
+	DBGOUT_TS("GPIO: %d", battMillivolts);
 	battMillivolts = battMillivolts * ((RESISTOR_R1 + RESISTOR_R2)/RESISTOR_R2);
-	DBGOUT(Serial.print, " battery:");
-	DBGOUT(Serial.print, battMillivolts);
-	DBGOUT(Serial.println, "mV");
+	DBGOUT("mV, battery: %dmV\n", battMillivolts);
 }
 
 static bool wifiConnected()
@@ -322,7 +341,7 @@ static unsigned long getTime()
 	struct tm timeinfo;
 	if (!getLocalTime(&timeinfo))
 	{
-		DBGOUT(Serial.println, "Failed to obtain time");
+		DBGOUT("Failed to obtain time\n");
 		return (0);
 	}
 	time(&now);
@@ -346,8 +365,7 @@ static bool connectToWiFi()
 	WiFi.setAutoReconnect(true); // does not reconnect if modem/router turns wifi off for a couple of hours and then turns it on again
 	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-	DBGOUT(Serial.print, millis());
-	DBGOUT(Serial.println, " connecting to wifi...");
+	DBGOUT_TS("connecting to wifi...\n");
 	int cnt = 0;
 	do
 	{
@@ -356,8 +374,7 @@ static bool connectToWiFi()
 		if (cnt >= RECONNECT_WIFI_TIMES_MAX)
 		{
 			noWifiCycles = NO_WIFI_CYCLES_MAX;
-			DBGOUT(Serial.print, millis());
-			DBGOUT(Serial.println, " failed to connect to wifi...");
+			DBGOUT_TS("failed to connect to wifi...\n");
 			return false;
 		}
 	} while (!wifiConnected());
@@ -369,16 +386,13 @@ static bool connectToWiFi()
 	epochTimeNow = getStartEpochTime();
 
 	// esp32's IP address
-	DBGOUT(Serial.print, millis());
-	DBGOUT(Serial.print, " connected with IP: ");
-	DBGOUT(Serial.println, WiFi.localIP());
-	DBGOUT(Serial.println, "");
+	DBGOUT_TS("connected with IP: %s\n\n", WiFi.localIP());
 	return true;
 }
 
 static void initGSheet()
 {
-	DBGOUT(GSheet.printf, "ESP Google Sheet Client v%s\n\n", ESP_GOOGLE_SHEET_CLIENT_VERSION);
+	DBGOUT_TS("ESP Google Sheet Client v%s\n\n", ESP_GOOGLE_SHEET_CLIENT_VERSION);
 
 	// set the callback for google api access token generation status (for debug only)
 	GSheet.setTokenCallback(tokenStatusCallback);
@@ -394,12 +408,12 @@ void tokenStatusCallback(TokenInfo info)
 {
 	if (info.status == token_status_error)
 	{
-		DBGOUT(GSheet.printf, "Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
-		DBGOUT(GSheet.printf, "Token error: %s\n", GSheet.getTokenError(info).c_str());
+		DBGOUT_TS("Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
+		DBGOUT_TS("Token error: %s\n", GSheet.getTokenError(info).c_str());
 	}
 	else
 	{
-		DBGOUT(GSheet.printf, "Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
+		DBGOUT_TS("Token info: type = %s, status = %s\n", GSheet.getTokenType(info).c_str(), GSheet.getTokenStatus(info).c_str());
 	}
 }
 
@@ -411,8 +425,8 @@ static void readSensor()
 	float espT;
 	unsigned char retryCnt = 0;
 
-	DBGOUT(Serial.println, "\nReading sensor...");
-	DBGOUT(Serial.println, "-----------------");
+	DBGOUT("\nReading sensor...\n");
+	DBGOUT("-----------------\n");
 
 	do {
 		// temperature or humidity read takes about 250ms!
@@ -433,7 +447,7 @@ static void readSensor()
 			++retryCnt;
 			if (retryCnt > MAX_RETRY_COUNT)
 			{
-				DBGOUT(Serial.println, F("DHT sensor read failed!"));
+				DBGOUT("DHT sensor read failed!\n");
 			}
 			delay(HALF_SECOND_DELAY);
 		}
@@ -450,16 +464,7 @@ static void readSensor()
 	humidity = h;
 	esp32Temperature = espT;
 
-	DBGOUT(Serial.print, millis());
-	DBGOUT(Serial.print, F(" H: "));
-	DBGOUT(Serial.print, humidity);
-	DBGOUT(Serial.print, F("%  T: "));
-	DBGOUT(Serial.print, temperature);
-	DBGOUT(Serial.print, F("C HI: "));
-	DBGOUT(Serial.print, heatIndex);
-	DBGOUT(Serial.print, F("C  Tesp32: "));
-	DBGOUT(Serial.print, esp32Temperature);
-	DBGOUT(Serial.println, F("C"));
+	DBGOUT_TS(" H: %.2f\% T: %.2fC HI: %.2fC  Tesp32: %.2fC\n", humidity, temperature, heatIndex, esp32Temperature);
 }
 
 static bool appendSensorValuesToGSheet(void)
@@ -469,18 +474,12 @@ static bool appendSensorValuesToGSheet(void)
 	unsigned char gsheetErrCnt = 0;
 	const unsigned char nrMeasurementSets = (wrBufferIdx - rdBufferIdx) % BUFFER_MAX_SIZE;
 
-	DBGOUT(Serial.println, "\nAppend spreadsheet values...");
-	DBGOUT(Serial.println, "----------------------------");
+	DBGOUT("\nAppend spreadsheet values...\n");
+	DBGOUT("----------------------------\n");
 
 	if (nrMeasurementSets)
 	{
-		DBGOUT(Serial.print, "There are ");
-		DBGOUT(Serial.print, nrMeasurementSets);
-		DBGOUT(Serial.print, " set of measurements in buffer (");
-		DBGOUT(Serial.print, wrBufferIdx);
-		DBGOUT(Serial.print, ",");
-		DBGOUT(Serial.print, rdBufferIdx);
-		DBGOUT(Serial.println, ")");
+		DBGOUT("There are %d set of measurements in buffer (%d,%d)\n", nrMeasurementSets, wrBufferIdx, rdBufferIdx);
 	}
 
 	do
@@ -508,9 +507,7 @@ static bool appendSensorValuesToGSheet(void)
 		if (rdBufferIdx != wrBufferIdx)
 		{
 			unsigned long pastEpochTime = epochTimeNow - ((wrBufferIdx - rdBufferIdx) % BUFFER_MAX_SIZE)*TIME_IN_DEEP_SLEEP;
-			DBGOUT(Serial.print, "Get measurement (ts:");
-			DBGOUT(Serial.print, pastEpochTime);
-			DBGOUT(Serial.println, ") from buffer");
+			DBGOUT("Get measurement (ts:%d) from buffer\n", pastEpochTime);
 
 			// set values from buffer
 			valueRange.set("values/[0]/[0]", pastEpochTime);
@@ -558,20 +555,19 @@ static bool appendSensorValuesToGSheet(void)
 		else
 		{
 			++gsheetErrCnt;
-			DBGOUT(Serial.println, GSheet.errorReason());
+			DBGOUT("%s\n", GSheet.errorReason());
 		}
 
 	} while (gsheetErrCnt < MAX_GSHEET_RETRY_COUNT);
 
-	DBGOUT(Serial.println, "");
-	DBGOUT(Serial.println, ESP.getFreeHeap());
+	DBGOUT("\n%d\n", ESP.getFreeHeap());
 
 	return (rdBufferIdx == wrBufferIdx);
 }
 
 static void storeData()
 {
-	DBGOUT(Serial.println, "Append measurement in buffer");
+	DBGOUT("Append measurement in buffer\n");
 	temperatureBuffer[wrBufferIdx] = (int) (temperature * CENTI_CONVERSION_FACTOR);
 	humidityBuffer[wrBufferIdx] = (int) (humidity * CENTI_CONVERSION_FACTOR);
 	battVoltsBuffer[wrBufferIdx] = (int) battMillivolts;
@@ -584,10 +580,7 @@ static void storeData()
 static void enterDeepSleepNow()
 {
 	#ifndef DEBUG
-		DBGOUT(Serial.print, millis());
-		DBGOUT(Serial.print, " ESP32 will wake up again in about ");
-		DBGOUT(Serial.print, String(TIME_IN_DEEP_SLEEP*1000UL - millis()));
-		DBGOUT(Serial.println, "ms");
+		DBGOUT_TS("ESP32 will wake up again in about %sms\n", String(TIME_IN_DEEP_SLEEP*1000UL - millis()));
 		DBGFLUSH();
 
 		// save working time, configure the wake up source and set time to sleep
@@ -598,7 +591,7 @@ static void enterDeepSleepNow()
 		esp_deep_sleep_start();
 	#else
 		// only debug purposes
-		DBGOUT(Serial.println, " ESP32 will wake up again in about ten seconds\n");
+		DBGOUT("ESP32 will wake up again in about ten seconds\n");
 		delay(10000);
 		epochTimeNow = getTime();
 		state = STATE_CHECK_BATTVOLTAGE;
@@ -611,27 +604,31 @@ static void printWakeupReason()
 
 	wakeup_reason = esp_sleep_get_wakeup_cause();
 
-	DBGOUT(Serial.print, millis());
-
 	switch (wakeup_reason)
 	{
 	case ESP_SLEEP_WAKEUP_EXT0:
-		DBGOUT(Serial.println, " wakeup caused by external signal using RTC_IO");
+		DBGOUT_TS("wakeup caused by external signal using RTC_IO\n");
 		break;
 	case ESP_SLEEP_WAKEUP_EXT1:
-		DBGOUT(Serial.println, " wakeup caused by external signal using RTC_CNTL");
+		DBGOUT_TS("wakeup caused by external signal using RTC_CNTL\n");
 		break;
 	case ESP_SLEEP_WAKEUP_TIMER:
-		DBGOUT(Serial.println, " wakeup caused by timer");
+		DBGOUT_TS("wakeup caused by timer\n");
 		break;
 	case ESP_SLEEP_WAKEUP_TOUCHPAD:
-		DBGOUT(Serial.println, " wakeup caused by touchpad");
+		DBGOUT_TS("wakeup caused by touchpad\n");
 		break;
 	case ESP_SLEEP_WAKEUP_ULP:
-		DBGOUT(Serial.println, " wakeup caused by ULP program");
+		DBGOUT_TS(" wakeup caused by ULP program\n");
 		break;
 	default:
-		DBGOUT(Serial.printf, " wakeup was not caused by deep sleep: %d\n", wakeup_reason);
+		DBGOUT_TS("wakeup was not caused by deep sleep: %d\n", wakeup_reason);
 		break;
 	}
+}
+
+static int64_t getTimestamp() {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec * 1000LL + (tv.tv_usec / 1000LL));
 }
