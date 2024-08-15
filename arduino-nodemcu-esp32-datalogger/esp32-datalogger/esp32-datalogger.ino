@@ -1,21 +1,25 @@
 /**
  * ESP32 Datalogger
  *
- * Used library            Version Pfad
- * WiFi                    2.0.0   C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\WiFi
- * DHT sensor library      1.4.6   C:\Users\rpede\Documents\Arduino\libraries\DHT_sensor_library
- * ESP-Google-Sheet-Client 1.4.4   C:\Users\rpede\Documents\Arduino\libraries\ESP-Google-Sheet-Client
- * SPIFFS                  2.0.0   C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\SPIFFS
- * SD                      2.0.0   C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\SD
- * SPI                     2.0.0   C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\SPI
- * Adafruit Unified Sensor 1.1.14  C:\Users\rpede\Documents\Arduino\libraries\Adafruit_Unified_Sensor
- * FS                      2.0.0   C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17\libraries\FS
+ * Used library            Version   Pfad
+ * WiFi                    2.0.0     C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.0.1\libraries\WiFi
+ * Networking              1.0.0     C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.0.1\libraries\Network
+ * DHT sensor library      1.4.6     C:\Users\rpede\Documents\Arduino\libraries\DHT_sensor_library
+ * BME68x Sensor library   1.2.40408 C:\Users\rpede\Documents\Arduino\libraries\Bosch-BME68x-Library
+ * Wire                    2.0.0     C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.0.1\libraries\Wire
+ * SPI                     2.0.0     C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.0.1\libraries\SPI
+ * ESP-Google-Sheet-Client 1.4.4     C:\Users\rpede\Documents\Arduino\libraries\ESP-Google-Sheet-Client
+ * SPIFFS                  2.0.0     C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.0.1\libraries\SPIFFS
+ * SD                      2.0.0     C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.0.1\libraries\SD
+ * Adafruit Unified Sensor 1.1.14    C:\Users\rpede\Documents\Arduino\libraries\Adafruit_Unified_Sensor
+ * FS                      2.0.0     C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.0.1\libraries\FS
  *
- * Used platform Version Pfad
- * esp32:esp32   2.0.17  C:\Users\rpede\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.17
- *
- * Board Packages Used:
+ * Supported Board Packages:
  * Arduino ESP32 Boards    "board": "esp32:esp32:esp32s3" (also "esp32:esp32:nodemcu-32s")
+ *
+ * Enter Boot mode:
+ * NodeMCU-32S: press the button on the board before flashing begins in vs code.
+ * Nano ESP32: 'Reset the Arduino bootloader on the Nano ESP32' to enter Boot mode.
  *
  * Some important links:
  * ESP32 Arduino Core’s documentation
@@ -46,81 +50,86 @@
  * - https://www.espboards.dev/blog/esp32-inbuilt-temperature-sensor/
  * Arduino Nano ESP32
  * - https://dronebotworkshop.com/nano-esp32/
+ * Arduino Nano ESP32 Cheat Sheet
+ * - https://docs.arduino.cc/tutorials/nano-esp32/cheat-sheet/
  * ESP32-S3-Nano
  * - https://www.waveshare.com/wiki/ESP32-S3-Nano
  * ESP32 Change CPU Speed (Clock Frequency)
  * - https://deepbluembedded.com/esp32-change-cpu-speed-clock-frequency/
  * Cautions In Using ESP32 ADC - Makerfabs
  * - https://www.makerfabs.com/blog/post/cautions-in-using-esp32-adc-makerfabs-2
+ * ESP32 SPI Communication: Set Pins, Multiple SPI Bus Interfaces, and Peripherals (Arduino IDE)
+ * - https://randomnerdtutorials.com/esp32-spi-communication-arduino/
+ * ESP32 Pinout Reference: Which GPIO pins should you use?
+ * - https://randomnerdtutorials.com/esp32-pinout-reference-gpios/
  */
 
 #include <Arduino.h>
 #include <WiFi.h>
 #include <DHT.h>
-#include <bsec.h>
+#include <bme68xLibrary.h>
 #include "time.h"
 #include "defines.h" // see defines.h.template
 #include "config.h"
 #include <ESP_Google_Sheet_Client.h>
 
 
-/* Configure the BSEC library with information about the sensor
-    18v/33v = Voltage at Vdd. 1.8V or 3.3V
-    3s/300s = BSEC operating mode, BSEC_SAMPLE_RATE_LP or BSEC_SAMPLE_RATE_ULP
-    4d/28d = Operating age of the sensor in days
-    generic_18v_3s_4d
-    generic_18v_3s_28d
-    generic_18v_300s_4d
-    generic_18v_300s_28d
-    generic_33v_3s_4d
-    generic_33v_3s_28d
-    generic_33v_300s_4d
-    generic_33v_300s_28d
-*/
-const uint8_t bsec_config_iaq[] = {
-#include "config/generic_33v_300s_4d/bsec_iaq.txt"
-};
-
 // for SD/SD_MMC mounting helper
 #include <GS_SDHelper.h>
 
-// initialize sensor before reading
-static void	initSensor();
+/// @brief Initialize DHT sensor before reading
+static void	initDhtSensor();
 
-// read external battery voltage
+/// @brief Initialize BME680 sensor before reading
+static void	initBmeSensor();
+
+/// @brief Read external battery voltage
 static void readBatteryVoltage();
 
-// check wifi status
+/// @brief Check wifi status
+/// @return true if wifi connected, false othwerwise
 static bool wifiConnected();
 
-// get epoch time,  it could take up-to five seconds because of getLocalTime()
+/// @brief Get epoch time,  it could take up-to five seconds because of getLocalTime()
+/// @return seconds since epoch time for system start
 static unsigned long getStartEpochTime();
 
-// function that gets current epoch time
+/// @brief Function that gets current epoch time
+/// @return seconds since epoch time
 static unsigned long getTime();
 
-// connect to wifi
+/// @brief Connect to wifi
+/// @return true on connected to wifi, false othwerwise
 static bool connectToWiFi();
 
-// initializes google sheet
+/// @brief Initializes google sheet
 static void initGSheet();
 
-// read sensor values
-static void readSensor();
+/// @brief Read DHT sensor values
+static void readDhtSensor();
 
-// append sensor values to google sheet
+/// @brief Start measurement in BME680
+static void startBmeSensor();
+
+/// @brief  Read BME680 sensor values
+/// @return true if values were read or timed out, false otherwise
+static bool readBmeSensor();
+
+/// @brief Append sensor values to google sheet
+/// @return true if all measurements were appended to Gsheet, false if pending measurements still in buffer
 static bool appendSensorValuesToGSheet();
 
-// stores sensor values in buffer when no wifi connection
+/// @brief Stores sensor values in buffer when no wifi connection
 static void storeData();
 
-// entering esp32 in deep sleep
+/// @brief Entering esp32 in deep sleep
 static void enterDeepSleepNow();
 
-// method to print the reason by which esp32 has been awaken from sleep
+/// @brief Method to print the reason by which esp32 has been awaken from sleep
 static void printWakeupReason();
 
-// get timestamp
+/// @brief Get timestamp
+/// @return timestamp with number of seconds and microseconds since the Epoch
 static int64_t getTimestamp();
 
 enum Constants
@@ -130,7 +139,7 @@ enum Constants
 	SHORT_MILLIS_DELAY = 10UL,
 	HALF_SECOND_DELAY = 500UL,
 	ONE_SECOND_DELAY = 1000UL,
-	WORK_MILLIS_TIMEOUT = 30000UL,
+	WORK_MILLIS_TIMEOUT = 15000UL,
 };
 
 typedef enum
@@ -138,7 +147,9 @@ typedef enum
 	STATE_POWER_ON = 0,
 	STATE_INIT_SENSOR,
 	STATE_CHECK_BATTVOLTAGE,
-	STATE_READ_SENSOR,
+	STATE_READ_DHT_SENSOR,
+	STATE_START_BME_SENSOR,
+	STATE_READ_BME_SENSOR,
 	STATE_CONNECT_WIFI,
 	STATE_INIT_GSHEET,
 	STATE_APPEND_GSHEET,
@@ -148,8 +159,8 @@ typedef enum
 	STATE_ERROR
 } state_t;
 
-// R1=(75K+5,7K), R2=100K
-// measured values for R1 and R2
+/// R1=(75K+5,7K), R2=100K
+/// measured values for R1 and R2
 constexpr float	RESISTOR_R1 = 80.5f;
 constexpr float	RESISTOR_R2 = 99.9f;
 
@@ -160,9 +171,13 @@ unsigned long epochTimeNow;
 unsigned long utilTimeStamp;
 
 // sensor variables
-float temperature = 0.0;
-float heatIndex = 0.0;
-float humidity = 0.0;
+float dhtTemperature = 0.0;
+float dhtHeatIndex = 0.0;
+float dhtHumidity = 0.0;
+float bmeTemperature = 0.0;
+float bmePressure = 0.0;
+float bmeHumidity = 0.0;
+float bmeGasResistance = 0.0;
 float esp32Temperature = 0.0;
 int battMillivolts = 0;
 
@@ -170,41 +185,45 @@ int battMillivolts = 0;
 const char *ntpServer = "pool.ntp.org";
 
 // esp32-datalogger version
-const char *VERSION = "1.0.5-beta";
+const char *VERSION = "1.0.6-beta";
 
 // main machine state variable
 state_t state;
 
 // buffers used when no wifi connection (SRAM RTC SLOW MEMORY)
-RTC_DATA_ATTR static int temperatureBuffer[BUFFER_MAX_SIZE];
-RTC_DATA_ATTR static int heatIndexBuffer[BUFFER_MAX_SIZE];
-RTC_DATA_ATTR static int humidityBuffer[BUFFER_MAX_SIZE];
-RTC_DATA_ATTR static int esp32TemperatureBuffer[BUFFER_MAX_SIZE];
-RTC_DATA_ATTR static int battVoltsBuffer[BUFFER_MAX_SIZE];
-RTC_DATA_ATTR static unsigned int esp32WorkTimeBuffer[BUFFER_MAX_SIZE];
+RTC_DATA_ATTR static int dhtTemperatureBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static int dhtHeatIndexBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static int dhtHumidityBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static int bmeTemperatureBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static int bmePressureBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static int bmeHumidityBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static int bmeGasResistanceBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static int esp32TemperatureBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static int battVoltsBuffer[BUFFER_MAX_SIZE] = {0};
+RTC_DATA_ATTR static unsigned int esp32WorkTimeBuffer[BUFFER_MAX_SIZE] = {0};
 RTC_DATA_ATTR unsigned char rdBufferIdx = 0;
 RTC_DATA_ATTR unsigned char wrBufferIdx = 0; // index to write next value
 RTC_DATA_ATTR unsigned char noWifiCycles = 0;
 
-// initialize DHT sensor
+// DHT-22 sensor
 DHT dht(DHTPIN, DHTTYPE);
 
-// initialize bme680 sensor
-Bsec bme680;
+// BME680 sensor
+Bme68x bme680;
 
 void setup()
 {
 	// turn all onboard LEDs off
 	TURN_OFF_ALL_ESP32_LEDs();
 
-	// sensor data pin needs a pullup
+	// DHT sensor data pin needs a pullup
 	DHT_DATA_PULLUP();
 
 	// starts serial interface
 	DBGOUT_INIT();
 
 	// some prints at startup
-	DBGOUT_PRINT_START();
+	DBGOUT_START();
 
 	// check indexes consistency
 	if (rdBufferIdx >= BUFFER_MAX_SIZE)
@@ -236,18 +255,31 @@ void loop()
 			break;
 
 		case STATE_INIT_SENSOR:
-			initSensor();
+			initDhtSensor();
+			initBmeSensor();
 			state = STATE_CHECK_BATTVOLTAGE;
 			break;
 
 		case STATE_CHECK_BATTVOLTAGE:
 			readBatteryVoltage();
-			state = STATE_READ_SENSOR;
+			state = STATE_READ_DHT_SENSOR;
 			break;
 
-		case STATE_READ_SENSOR:
-			readSensor();
-			state = (noWifiCycles) ? STATE_STORE_DATA : STATE_CONNECT_WIFI;
+		case STATE_READ_DHT_SENSOR:
+			readDhtSensor();
+			state = STATE_START_BME_SENSOR;
+			break;
+
+		case STATE_START_BME_SENSOR:
+			startBmeSensor();
+			state = STATE_READ_BME_SENSOR;
+			break;
+
+		case STATE_READ_BME_SENSOR:
+			if (readBmeSensor()) {
+				state = (noWifiCycles) ? STATE_STORE_DATA : STATE_CONNECT_WIFI;
+				break;
+			}
 			break;
 
 		case STATE_CONNECT_WIFI:
@@ -279,22 +311,48 @@ void loop()
 
 		case STATE_ERROR:
 		default:
-			DBGOUT_TS("error state\n");
+			DBGOUT_TS("Error state\n");
 			state = STATE_ENTER_DEEP_SLEEP;
 			break;
 	}
 }
 
-static void	initSensor()
+static void	initDhtSensor()
 {
 	// initialize DHT sensor
 	dht.begin();
 }
 
+static void	initBmeSensor()
+{
+	// initializes the sensor based on SPI library
+	SPI.begin(BME_VSPI_SCK, BME_VSPI_MISO, BME_VSPI_MOSI, BME_VSPI_CS);
+	bme680.begin(BME_VSPI_CS, SPI);
+
+	const int8_t bme680Status = bme680.checkStatus();
+	if(bme680Status)
+	{
+		if (bme680Status == BME68X_ERROR)
+		{
+			DBGOUT_TS("Sensor error: %s\n", bme680.statusString());
+			return;
+		}
+		else if (bme680Status == BME68X_WARNING)
+		{
+			DBGOUT_TS("Sensor warning: %s\n", bme680.statusString());
+		}
+	}
+
+	// set the default configuration for temperature, pressure and humidity
+	bme680.setTPH();
+
+	// set the heater configuration to 300 deg C for 100ms for Forced mode
+	bme680.setHeaterProf(300, 100);
+}
+
 static void readBatteryVoltage()
 {
-	DBGOUT("\nBattery voltage...\n");
-	DBGOUT("------------------\n");
+	DBGOUT_TS("Battery voltage...\n");
 
 	battMillivolts = 0;
 	for (uint8_t i=0; i<MAX_RETRY_COUNT; i++)
@@ -314,9 +372,10 @@ static void readBatteryVoltage()
 	     - <------------>     GND
 	   ##################################### */
 	battMillivolts = (battMillivolts/MAX_RETRY_COUNT);
-	DBGOUT_TS("GPIO: %d", battMillivolts);
+	DBGOUT_TS("GPIO     %dmV, ", battMillivolts);
 	battMillivolts = battMillivolts * ((RESISTOR_R1 + RESISTOR_R2)/RESISTOR_R2);
-	DBGOUT("mV, battery: %dmV\n", battMillivolts);
+	DBGOUT("battery: %dmV\n", battMillivolts);
+	DBGOUT_TS("------------------\n");
 }
 
 static bool wifiConnected()
@@ -329,7 +388,7 @@ static unsigned long getStartEpochTime()
 	unsigned long epochTime = getTime();
 	if (epochTime)
 	{
-		// Get start timestamp
+		// get start timestamp
 		epochTime -= (millis()/1000);
 	}
 	return epochTime;
@@ -341,7 +400,7 @@ static unsigned long getTime()
 	struct tm timeinfo;
 	if (!getLocalTime(&timeinfo))
 	{
-		DBGOUT("Failed to obtain time\n");
+		DBGOUT_TS("Failed to obtain time\n");
 		return (0);
 	}
 	time(&now);
@@ -352,7 +411,7 @@ static bool connectToWiFi()
 {
 	if (wifiConnected())
 	{
-		// Get start timestamp
+		// get start timestamp
 		epochTimeNow = getStartEpochTime();
 
 		// just return if wifi connected
@@ -365,7 +424,7 @@ static bool connectToWiFi()
 	WiFi.setAutoReconnect(true); // does not reconnect if modem/router turns wifi off for a couple of hours and then turns it on again
 	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-	DBGOUT_TS("connecting to wifi...\n");
+	DBGOUT_TS("Connecting to wifi...\n");
 	int cnt = 0;
 	do
 	{
@@ -374,7 +433,7 @@ static bool connectToWiFi()
 		if (cnt >= RECONNECT_WIFI_TIMES_MAX)
 		{
 			noWifiCycles = NO_WIFI_CYCLES_MAX;
-			DBGOUT_TS("failed to connect to wifi...\n");
+			DBGOUT_TS("Failed to connect to wifi...\n");
 			return false;
 		}
 	} while (!wifiConnected());
@@ -382,17 +441,17 @@ static bool connectToWiFi()
 	// configure time
 	configTime(0, 0, ntpServer);
 
-	// Get start timestamp
+	// get start timestamp
 	epochTimeNow = getStartEpochTime();
 
 	// esp32's IP address
-	DBGOUT_TS("connected with IP: %s\n\n", WiFi.localIP());
+	DBGOUT_TS("Connected with IP: %s\n", WiFi.localIP());
 	return true;
 }
 
 static void initGSheet()
 {
-	DBGOUT_TS("ESP Google Sheet Client v%s\n\n", ESP_GOOGLE_SHEET_CLIENT_VERSION);
+	DBGOUT_TS("Initialize 'ESP Google Sheet Client' v%s\n", ESP_GOOGLE_SHEET_CLIENT_VERSION);
 
 	// set the callback for google api access token generation status (for debug only)
 	GSheet.setTokenCallback(tokenStatusCallback);
@@ -417,7 +476,7 @@ void tokenStatusCallback(TokenInfo info)
 	}
 }
 
-static void readSensor()
+static void readDhtSensor()
 {
 	float t;
 	float hic;
@@ -425,8 +484,7 @@ static void readSensor()
 	float espT;
 	unsigned char retryCnt = 0;
 
-	DBGOUT("\nReading sensor...\n");
-	DBGOUT("-----------------\n");
+	DBGOUT_TS("Reading DHT sensor...\n");
 
 	do {
 		// temperature or humidity read takes about 250ms!
@@ -447,7 +505,7 @@ static void readSensor()
 			++retryCnt;
 			if (retryCnt > MAX_RETRY_COUNT)
 			{
-				DBGOUT("DHT sensor read failed!\n");
+				DBGOUT_TS("DHT sensor read failed!\n");
 			}
 			delay(HALF_SECOND_DELAY);
 		}
@@ -459,12 +517,49 @@ static void readSensor()
 	} while (true);
 
 	// update humidity and temperature values
-	temperature = t;
-	heatIndex = hic;
-	humidity = h;
+	dhtTemperature = t;
+	dhtHeatIndex = hic;
+	dhtHumidity = h;
 	esp32Temperature = espT;
 
-	DBGOUT_TS(" H: %.2f\% T: %.2fC HI: %.2fC  Tesp32: %.2fC\n", humidity, temperature, heatIndex, esp32Temperature);
+	DBGOUT_TS("DHT22   H:%.2f%%, T:%.2fC, HI:%.2fC, Tesp32:%.2fC\n", dhtHumidity, dhtTemperature, dhtHeatIndex, esp32Temperature);
+	DBGOUT_TS("------------------\n");
+}
+
+static void startBmeSensor()
+{
+	DBGOUT_TS("Starting BME sensor (0x%X)...\n", bme680.getOpMode());
+	bme680.setOpMode(BME68X_FORCED_MODE);
+	delayMicroseconds(bme680.getMeasDur());
+}
+
+static bool readBmeSensor()
+{
+	if (bme680.fetchData())
+	{
+		DBGOUT_TS("Reading BME sensor...\n");
+
+		bme68xData data;
+		bme680.getData(data);
+
+		bmeTemperature = data.temperature;
+		bmeHumidity = data.humidity;
+		bmePressure = data.pressure / 10; // converted from pascal to hectopascal 0.1
+		bmeGasResistance = data.gas_resistance;
+
+		DBGOUT_TS("BME680  H:%.2f%%, T:%.2fC, P:%ihPa, G:%iohm, status:0x%X\n", bmeHumidity, bmeTemperature, (int) bmePressure, (int) bmeGasResistance, data.status);
+		DBGOUT_TS("------------------\n");
+
+		return true;
+	}
+
+	if ((millis() > WORK_MILLIS_TIMEOUT))
+	{
+		DBGOUT_TS("Millis timed out!\n");
+		return true;
+	}
+
+	return false;
 }
 
 static bool appendSensorValuesToGSheet(void)
@@ -474,12 +569,11 @@ static bool appendSensorValuesToGSheet(void)
 	unsigned char gsheetErrCnt = 0;
 	const unsigned char nrMeasurementSets = (wrBufferIdx - rdBufferIdx) % BUFFER_MAX_SIZE;
 
-	DBGOUT("\nAppend spreadsheet values...\n");
-	DBGOUT("----------------------------\n");
+	DBGOUT_TS("Append spreadsheet values...\n");
 
 	if (nrMeasurementSets)
 	{
-		DBGOUT("There are %d set of measurements in buffer (%d,%d)\n", nrMeasurementSets, wrBufferIdx, rdBufferIdx);
+		DBGOUT_TS("There are %d set of measurements in buffer (%d,%d)\n", nrMeasurementSets, wrBufferIdx, rdBufferIdx);
 	}
 
 	do
@@ -493,6 +587,7 @@ static bool appendSensorValuesToGSheet(void)
 		if (millis() > WORK_MILLIS_TIMEOUT)
 		{
 			// timeout, terminate here
+			DBGOUT_TS("Millis timed out!\n");
 			break;
 		}
 
@@ -507,43 +602,55 @@ static bool appendSensorValuesToGSheet(void)
 		if (rdBufferIdx != wrBufferIdx)
 		{
 			unsigned long pastEpochTime = epochTimeNow - ((wrBufferIdx - rdBufferIdx) % BUFFER_MAX_SIZE)*TIME_IN_DEEP_SLEEP;
-			DBGOUT("Get measurement (ts:%d) from buffer\n", pastEpochTime);
+			DBGOUT_TS("Get measurement (ts:%d) from buffer\n", pastEpochTime);
 
 			// set values from buffer
-			valueRange.set("values/[0]/[0]", pastEpochTime);
-			valueRange.set("values/[1]/[0]", temperatureBuffer[rdBufferIdx]);
-			valueRange.set("values/[2]/[0]", humidityBuffer[rdBufferIdx]);
-			valueRange.set("values/[3]/[0]", battVoltsBuffer[rdBufferIdx]);
-			valueRange.set("values/[4]/[0]", esp32TemperatureBuffer[rdBufferIdx]);
-			valueRange.set("values/[5]/[0]", esp32WorkTimeBuffer[rdBufferIdx]);
-			valueRange.set("values/[6]/[0]", heatIndexBuffer[rdBufferIdx]);
+			valueRange.set("values/[0]/[0]",  pastEpochTime);
+			valueRange.set("values/[1]/[0]",  dhtTemperatureBuffer[rdBufferIdx]);
+			valueRange.set("values/[2]/[0]",  dhtHumidityBuffer[rdBufferIdx]);
+			valueRange.set("values/[3]/[0]",  battVoltsBuffer[rdBufferIdx]);
+			valueRange.set("values/[4]/[0]",  esp32TemperatureBuffer[rdBufferIdx]);
+			valueRange.set("values/[5]/[0]",  esp32WorkTimeBuffer[rdBufferIdx]);
+			valueRange.set("values/[6]/[0]",  dhtHeatIndexBuffer[rdBufferIdx]);
+			valueRange.set("values/[7]/[0]",  bmeTemperatureBuffer[rdBufferIdx]);
+			valueRange.set("values/[8]/[0]",  bmeHumidityBuffer[rdBufferIdx]);
+			valueRange.set("values/[9]/[0]",  bmePressureBuffer[rdBufferIdx]);
+			valueRange.set("values/[10]/[0]", bmeGasResistanceBuffer[rdBufferIdx]);
 		}
 		else
 		{
 			// set last 'now' values
 			valueRange.set("values/[0]/[0]", epochTimeNow);
-			valueRange.set("values/[1]/[0]", (int) (temperature * CENTI_CONVERSION_FACTOR));
-			valueRange.set("values/[2]/[0]", (int) (humidity * CENTI_CONVERSION_FACTOR));
+			valueRange.set("values/[1]/[0]", (int) (dhtTemperature * CENTI_CONVERSION_FACTOR));
+			valueRange.set("values/[2]/[0]", (int) (dhtHumidity * CENTI_CONVERSION_FACTOR));
 			valueRange.set("values/[3]/[0]", (int) battMillivolts);
 			valueRange.set("values/[4]/[0]", (int) (esp32Temperature * CENTI_CONVERSION_FACTOR));
+			valueRange.set("values/[6]/[0]", (int) (dhtHeatIndex * CENTI_CONVERSION_FACTOR));
+			valueRange.set("values/[7]/[0]", (int) (bmeTemperature * CENTI_CONVERSION_FACTOR));
+			valueRange.set("values/[8]/[0]", (int) (bmeHumidity * CENTI_CONVERSION_FACTOR));
+			valueRange.set("values/[9]/[0]", (int) bmePressure);
+			valueRange.set("values/[10]/[0]", (int) bmeGasResistance);
+
 			/* add 2ms, measured max. time from here until calling esp_deep_sleep_start() */
 			valueRange.set("values/[5]/[0]", (unsigned int) millis() + 2);
-			valueRange.set("values/[6]/[0]", (int) (heatIndex * CENTI_CONVERSION_FACTOR));
 		}
 
 		// for google sheet API ref doc, go to https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append
 		// Append values to the spreadsheet
 		const bool success = GSheet.values.append(&response /* returned response */, spreadsheetId /* spreadsheet Id to append */, "Sheet1!A2" /* range to append */, &valueRange /* data range to append */);
+
 		if (success)
 		{
 			gsheetErrCnt = 0;
 			response.toString(Serial, true);
 			valueRange.clear();
+			DBGOUT("\n");
 
 			// buffer empty condition?
 			if (rdBufferIdx == wrBufferIdx)
 			{
 				// then, we are done
+				DBGOUT_TS("Append success!\n");
 				break;
 			}
 			else
@@ -555,24 +662,30 @@ static bool appendSensorValuesToGSheet(void)
 		else
 		{
 			++gsheetErrCnt;
-			DBGOUT("%s\n", GSheet.errorReason());
+			DBGOUT_TS("Append error, reason: %s\n", GSheet.errorReason());
 		}
 
 	} while (gsheetErrCnt < MAX_GSHEET_RETRY_COUNT);
 
-	DBGOUT("\n%d\n", ESP.getFreeHeap());
+	DBGOUT_TS("Free heap %d\n", ESP.getFreeHeap());
+	DBGOUT_TS("------------------\n");
 
 	return (rdBufferIdx == wrBufferIdx);
 }
 
 static void storeData()
 {
-	DBGOUT("Append measurement in buffer\n");
-	temperatureBuffer[wrBufferIdx] = (int) (temperature * CENTI_CONVERSION_FACTOR);
-	humidityBuffer[wrBufferIdx] = (int) (humidity * CENTI_CONVERSION_FACTOR);
+	DBGOUT_TS("Append measurement in buffer\n");
+	dhtTemperatureBuffer[wrBufferIdx] = (int) (dhtTemperature * CENTI_CONVERSION_FACTOR);
+	dhtHumidityBuffer[wrBufferIdx] = (int) (dhtHumidity * CENTI_CONVERSION_FACTOR);
 	battVoltsBuffer[wrBufferIdx] = (int) battMillivolts;
 	esp32TemperatureBuffer[wrBufferIdx] = (int) (esp32Temperature * CENTI_CONVERSION_FACTOR);
-	heatIndexBuffer[wrBufferIdx] = (int) (heatIndex * CENTI_CONVERSION_FACTOR);
+	dhtHeatIndexBuffer[wrBufferIdx] = (int) (dhtHeatIndex * CENTI_CONVERSION_FACTOR);
+	bmeTemperatureBuffer[wrBufferIdx] = (int) (bmeTemperature * CENTI_CONVERSION_FACTOR);
+	bmeHumidityBuffer[wrBufferIdx] = (int) (bmeHumidity * CENTI_CONVERSION_FACTOR);
+	bmePressureBuffer[wrBufferIdx] = (int) bmePressure;
+	bmeGasResistanceBuffer[wrBufferIdx] = (int) bmeGasResistance;
+
 	esp32WorkTimeBuffer[wrBufferIdx] = (unsigned int) millis();
 	wrBufferIdx = (wrBufferIdx + 1) % BUFFER_MAX_SIZE;
 }
@@ -591,8 +704,9 @@ static void enterDeepSleepNow()
 		esp_deep_sleep_start();
 	#else
 		// only debug purposes
-		DBGOUT("ESP32 will wake up again in about ten seconds\n");
-		delay(10000);
+		DBGOUT_TS("ESP32 will wake up again in about thirty seconds\n");
+		DBGOUT_TS("------------------\n");
+		delay(30000);
 		epochTimeNow = getTime();
 		state = STATE_CHECK_BATTVOLTAGE;
 	#endif
@@ -607,27 +721,29 @@ static void printWakeupReason()
 	switch (wakeup_reason)
 	{
 	case ESP_SLEEP_WAKEUP_EXT0:
-		DBGOUT_TS("wakeup caused by external signal using RTC_IO\n");
+		DBGOUT_TS("Wakeup caused by external signal using RTC_IO\n");
 		break;
 	case ESP_SLEEP_WAKEUP_EXT1:
-		DBGOUT_TS("wakeup caused by external signal using RTC_CNTL\n");
+		DBGOUT_TS("Wakeup caused by external signal using RTC_CNTL\n");
 		break;
 	case ESP_SLEEP_WAKEUP_TIMER:
-		DBGOUT_TS("wakeup caused by timer\n");
+		DBGOUT_TS("Wakeup caused by timer\n");
 		break;
 	case ESP_SLEEP_WAKEUP_TOUCHPAD:
-		DBGOUT_TS("wakeup caused by touchpad\n");
+		DBGOUT_TS("Wakeup caused by touchpad\n");
 		break;
 	case ESP_SLEEP_WAKEUP_ULP:
-		DBGOUT_TS(" wakeup caused by ULP program\n");
+		DBGOUT_TS("Wakeup caused by ULP program\n");
 		break;
 	default:
-		DBGOUT_TS("wakeup was not caused by deep sleep: %d\n", wakeup_reason);
+		DBGOUT_TS("Wakeup was not caused by deep sleep: %d\n", wakeup_reason);
 		break;
 	}
+	DBGOUT_TS("------------------\n");
 }
 
-static int64_t getTimestamp() {
+static int64_t getTimestamp()
+{
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000LL + (tv.tv_usec / 1000LL));

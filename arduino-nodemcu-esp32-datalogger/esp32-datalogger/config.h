@@ -18,22 +18,17 @@
 	Serial.println("");    \
 } while (0)
 #define DBGOUT_TS(fmt, ...) (Serial.printf("%09llu: " fmt, getTimestamp(), ##__VA_ARGS__))
-#define DBGOUT(fmt, ...) (Serial.printf("%09llu: " fmt, ##__VA_ARGS__))
+#define DBGOUT(fmt, ...) (Serial.printf(fmt, ##__VA_ARGS__))
 #define DBGFLUSH() Serial.flush()
-#define DBGOUT_PRINT_START() do {         \
-	printWakeupReason();                  \
-	uint32_t Freq = getCpuFrequencyMhz(); \
-	Serial.print("CPU Freq = ");          \
-	Serial.print(Freq);                   \
-	Serial.println(" MHz");               \
-	Freq = getXtalFrequencyMhz();         \
-	Serial.print("XTAL Freq = ");         \
-	Serial.print(Freq);                   \
-	Serial.println(" MHz");               \
-	Freq = getApbFrequency();             \
-	Serial.print("APB Freq = ");          \
-	Serial.print(Freq);                   \
-	Serial.println(" Hz");                \
+#define DBGOUT_START() do {                  \
+	printWakeupReason();                     \
+	uint32_t Freq = getCpuFrequencyMhz();    \
+	DBGOUT_TS("CPU Freq = %d MHz\n", Freq);  \
+	Freq = getXtalFrequencyMhz();            \
+	DBGOUT_TS("XTAL Freq = %d MHz\n", Freq); \
+	Freq = getApbFrequency();                \
+	DBGOUT_TS("APB Freq = %d Hz\n", Freq);   \
+	DBGOUT_TS("------------------\n");       \
 } while (0)
 
 #else
@@ -41,7 +36,7 @@
 #define DBGOUT_TS(...)
 #define DBGOUT(...)
 #define DBGFLUSH()
-#define DBGOUT_PRINT_START()
+#define DBGOUT_START()
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,6 +69,10 @@
 #ifdef NODEMCU_ESP32_JOYIT
 #define ANALOG_BATT_GPIO 33
 #define DHTPIN            4
+#define BME_VSPI_MOSI    23
+#define BME_VSPI_MISO    19
+#define BME_VSPI_SCK     18
+#define BME_VSPI_CS       5
 #define TURN_OFF_ALL_ESP32_LEDs() do { \
 	pinMode(LED_BUILTIN, OUTPUT);      \
 	digitalWrite(LED_BUILTIN, HIGH);   \
@@ -83,6 +82,10 @@
 #ifdef ESP32_NANO_S3_WAVESHARE
 #define ANALOG_BATT_GPIO A0
 #define DHTPIN           5
+#define BME_VSPI_MOSI   38
+#define BME_VSPI_MISO   47
+#define BME_VSPI_SCK    48
+#define BME_VSPI_CS      7
 #define TURN_OFF_ALL_ESP32_LEDs() do {   \
 		pinMode(LED_BUILTIN, OUTPUT);    \
 		pinMode(0, OUTPUT);              \
