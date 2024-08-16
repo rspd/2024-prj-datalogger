@@ -64,15 +64,30 @@
 #define ESP32_NANO_S3_WAVESHARE
 
 ///////////////////////////////////////////////////////////////////////////////
+/// ESP32 BME680 communication
+// #define USE_SPI
+#define USE_TWI
+
+///////////////////////////////////////////////////////////////////////////////
 /// ESP32 GPIOs configuration
 
 #ifdef NODEMCU_ESP32_JOYIT
-#define ANALOG_BATT_GPIO 33
-#define DHTPIN            4
-#define BME_VSPI_MOSI    23
-#define BME_VSPI_MISO    19
-#define BME_VSPI_SCK     18
-#define BME_VSPI_CS       5
+#define ANALOG_BATT_GPIO    33
+#define DHTPIN               4
+
+#ifdef USE_TWI
+	#define BME_I2C_SDA     11 // <<-- to verify
+	#define BME_I2C_SCL     12 // <<-- to verify
+	#define BME_I2C_ADDR  0x77
+#endif
+
+#ifdef USE_SPI
+	#define BME_VSPI_MOSI    23
+	#define BME_VSPI_MISO    19
+	#define BME_VSPI_SCK     18
+	#define BME_VSPI_CS       5
+#endif
+
 #define TURN_OFF_ALL_ESP32_LEDs() do { \
 	pinMode(LED_BUILTIN, OUTPUT);      \
 	digitalWrite(LED_BUILTIN, HIGH);   \
@@ -82,10 +97,20 @@
 #ifdef ESP32_NANO_S3_WAVESHARE
 #define ANALOG_BATT_GPIO A0
 #define DHTPIN           5
-#define BME_VSPI_MOSI   38
-#define BME_VSPI_MISO   47
-#define BME_VSPI_SCK    48
-#define BME_VSPI_CS      7
+
+#ifdef USE_TWI
+	#define BME_I2C_SDA     11
+	#define BME_I2C_SCL     12
+	#define BME_I2C_ADDR  0x77
+#endif
+
+#ifdef USE_SPI
+	#define BME_VSPI_MOSI   38
+	#define BME_VSPI_MISO   47
+	#define BME_VSPI_SCK    48
+	#define BME_VSPI_CS      7
+#endif
+
 #define TURN_OFF_ALL_ESP32_LEDs() do {   \
 		pinMode(LED_BUILTIN, OUTPUT);    \
 		pinMode(0, OUTPUT);              \

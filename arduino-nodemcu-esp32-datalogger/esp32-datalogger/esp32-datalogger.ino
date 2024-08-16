@@ -211,6 +211,11 @@ DHT dht(DHTPIN, DHTTYPE);
 // BME680 sensor
 Bme68x bme680;
 
+#ifdef USE_TWI
+	// TWI interface to BME680
+	TwoWire TWIBME = TwoWire(0);
+#endif
+
 void setup()
 {
 	// turn all onboard LEDs off
@@ -325,9 +330,17 @@ static void	initDhtSensor()
 
 static void	initBmeSensor()
 {
-	// initializes the sensor based on SPI library
-	SPI.begin(BME_VSPI_SCK, BME_VSPI_MISO, BME_VSPI_MOSI, BME_VSPI_CS);
-	bme680.begin(BME_VSPI_CS, SPI);
+	#ifdef USE_SPI
+		// initializes the sensor based on SPI library
+		SPI.begin(BME_VSPI_SCK, BME_VSPI_MISO, BME_VSPI_MOSI, BME_VSPI_CS);
+		bme680.begin(BME_VSPI_CS, SPI);
+	#endif
+
+	#ifdef USE_TWI
+		// initializes the sensor based on TwoWire library
+		TWIBME.begin(BME_I2C_SDA, BME_I2C_SCL);
+		bme680.begin(BME_I2C_ADDR, TWIBME);
+	#endif
 
 	const int8_t bme680Status = bme680.checkStatus();
 	if(bme680Status)
@@ -344,7 +357,10 @@ static void	initBmeSensor()
 	}
 
 	// set the default configuration for temperature, pressure and humidity
-	bme680.setTPH();
+	bme680.setTPH(BME68X_OS_8X, BME68X_OS_4X, BME68X_OS_4X);
+
+	// set the filter to apply to the measurements
+	bme680.setFilter(BME68X_FILTER_SIZE_3);
 
 	// set the heater configuration to 300 deg C for 100ms for Forced mode
 	bme680.setHeaterProf(300, 100);
@@ -545,9 +561,9 @@ static bool readBmeSensor()
 		bmeTemperature = data.temperature;
 		bmeHumidity = data.humidity;
 		bmePressure = data.pressure / 10; // converted from pascal to hectopascal 0.1
-		bmeGasResistance = data.gas_resistance;
+		bmeGasResistance = data.gas_resistance / 1000;
 
-		DBGOUT_TS("BME680  H:%.2f%%, T:%.2fC, P:%ihPa, G:%iohm, status:0x%X\n", bmeHumidity, bmeTemperature, (int) bmePressure, (int) bmeGasResistance, data.status);
+		DBGOUT_TS("BME680  H:%.2f%%, T:%.2fC, P:%.1fhPa, G:%.1fkOhm, status:0x%X\n", bmeHumidity, bmeTemperature, bmePressure, bmeGasResistance, data.status);
 		DBGOUT_TS("------------------\n");
 
 		return true;
