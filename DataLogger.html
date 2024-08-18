@@ -3,8 +3,6 @@
 
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
-		integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 	<base target="_top">
 	<!-- include styling file here (css) -->
 	<?!= include('stylesheet'); ?>
@@ -18,7 +16,7 @@
 		<a id="previous" class="previous round" onClick="slide('prev')">&#8249;</a>
 		<h1>ESP32 Datalogger</h1>
 		<a id="next" class="next round" onClick="slide('next')">&#8250;</a>
-		<div id="info-version">2024 - v1.06-beta</div>
+		<div id="info-version">2024 - v1.07-beta</div>
 	</div>
 
 	<div id="feedback" style="margin-top: 25vh">
@@ -28,137 +26,297 @@
 		</center>
 	</div>
 
-	<form id="hidden-header-form">
-		<center>
-			<table id="esp32WorkTime-info">
-				<tr>
-					<td colspan="4" style="padding-bottom:15px; text-align:center">
-						<div id="info">?</div>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">
-						<center class="date-last-measurement">?</center>
-					</td>
-					<td class="date-start-measurement">?</td>
-				</tr>
-				<tr>
-					<td>
-						<i class="fas fa-regular fa-moon fa-3x" aria-hidden="true"></i>
-					</td>
-					<td>
-						<span class="dht-labels">Sleep time</span>
-					</td>
-					<td>
-						<span class="dht-labels" id="esp32SleepTime">?</span>
-					</td>
-					<td>
-						<table id="esp32SleepTime-stats">
-							<tr>
-								<td>avg.</td>
-								<td>
-									<span id="esp32SleepTime-avg">?</span>
-								</td>
-							</tr>
-							<tr>
-								<td>max</td>
-								<td>
-									<span id="esp32SleepTime-max">?</span>
-								</td>
-							</tr>
-							<tr>
-								<td>min</td>
-								<td>
-									<span id="esp32SleepTime-min">?</span>
-								</td>
-							</tr>
-						</table>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<i class="fas fa-regular fa-clock fa-3x" aria-hidden="true"></i>
-					</td>
-					<td>
-						<span class="dht-labels">Work time</span>
-					</td>
-					<td style="text-align:center">
-						<span class="dht-labels" id="esp32WorkTime">?</span>
-					</td>
-					<td>
-						<table id="esp32WorkTime-stats">
-							<tr>
-								<td>avg.</td>
-								<td>
-									<span id="esp32WorkTime-avg">?</span>
-									<span>ms</span>
-								</td>
-							</tr>
-							<tr>
-								<td>max</td>
-								<td>
-									<span id="esp32WorkTime-max">?</span>
-									<span>ms</span>
-								</td>
-							</tr>
-							<tr>
-								<td>min</td>
-								<td>
-									<span id="esp32WorkTime-min">?</span>
-									<span>ms</span>
-								</td>
-							</tr>
-						</table>
-					</td>
-				</tr>
-			</table>
-		</center>
-	</form>
-
 	<div class="container">
 		<div class="pages">
 			<div class="page one">
-				<form id="hidden-upper-form">
+				<form id="hidden-header-form">
 					<center>
-						<table id="temperature-info">
+						<table id="esp32WorkTime-info">
+							<tr>
+								<td colspan="4" style="padding-bottom:15px">
+									<div id="info">?</div>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="3" class="date-last-measurement">?</td>
+								<td>
+									<div class="date-start-measurement">?
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="4">
+									<div>ESP32</div>
+								</td>
+							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-thermometer-half fa-3x" aria-hidden="true"></i>
+									<i class="fas fa-regular fa-moon fa-3x" aria-hidden="true"></i>
+								</td>
+								<td colspan="2">
+									<span class="large-label" id="esp32SleepTime">?</span>
 								</td>
 								<td>
-									<span class="dht-labels">Temperature</span>
+									<table>
+										<tr>
+											<td>
+												<span>(min)</span>
+											</td>
+											<td>
+												<span>(avg.)</span>
+											</td>
+											<td>
+												<span>(max)</span>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<span id="esp32SleepTime-min">?</span>
+											</td>
+											<td>
+												<span id="esp32SleepTime-avg">?</span>
+											</td>
+											<td>
+												<span id="esp32SleepTime-max">?</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-regular fa-clock fa-3x clock-color" aria-hidden="true"></i>
+								</td>
+								<td colspan="2">
+									<span class="large-label" id="esp32WorkTime">?</span>
 								</td>
 								<td>
-									<span id="temperature" class="dht-labels greater">?</span>
+									<table>
+										<tr>
+											<td class="stats-info">
+												<span id="esp32WorkTime-min">?</span>
+												<span>ms</span>
+											</td>
+											<td class="stats-info">
+												<span id="esp32WorkTime-avg">?</span>
+												<span>ms</span>
+											</td>
+											<td class="stats-info">
+												<span id="esp32WorkTime-max">?</span>
+												<span>ms</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fa fa-battery-half fa-3x fa-rotate-270 batteryVoltage-color"
+										aria-hidden="true"></i>
+								</td>
+								<td colspan="2">
+									<span id="batteryVoltage" class="large-label greater">?</span>
+									<span>V</span>
+								</td>
+								<td>
+									<table>
+										<tr>
+											<td>
+												<span id="batteryVoltage-min">?</span>
+												<span>V</span>
+											</td>
+											<td>
+												<span id="batteryVoltage-avg">?</span>
+												<span>V</span>
+											</td>
+											<td>
+												<span id="batteryVoltage-max">?</span>
+												<span>V</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-thermometer-half fa-3x thermometer-color" aria-hidden="true"></i>
+								</td>
+								<td colspan="2">
+									<span id="esp32Temperature" class="large-label greater">?</span>
 									<span>&deg;C</span>
 								</td>
 								<td>
-									<table id="temperature-stats">
+									<table>
 										<tr>
-											<td>avg.</td>
 											<td>
-												<span id="temperature-avg">?</span>
+												<span id="esp32Temperature-min">?</span>
 												<span>&deg;c</span>
 											</td>
-										</tr>
-										<tr>
-											<td>max</td>
 											<td>
-												<span id="temperature-max">?</span>
+												<span id="esp32Temperature-avg">?</span>
 												<span>&deg;c</span>
 											</td>
-										</tr>
-										<tr>
-											<td>min</td>
 											<td>
-												<span id="temperature-min">?</span>
+												<span id="esp32Temperature-max">?</span>
 												<span>&deg;c</span>
 											</td>
 										</tr>
 									</table>
 								</td>
 							</tr>
+							<tr>
+								<td colspan="4">
+									<div>DHT22</div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-thermometer-half fa-3x thermometer-color" aria-hidden="true"></i>
+								</td>
+								<td colspan="2">
+									<span id="temperature-dht" class="large-label greater">?</span>
+									<span>&deg;C</span>
+								</td>
+								<td>
+									<table>
+										<tr>
+											<td>
+												<span id="temperature-dht-min">?</span>
+												<span>&deg;c</span>
+											</td>
+											<td>
+												<span id="temperature-dht-avg">?</span>
+												<span>&deg;c</span>
+											</td>
+											<td>
+												<span id="temperature-dht-max">?</span>
+												<span>&deg;c</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-tint fa-3x humidity-color"></i>
+								</td>
+								<td colspan="2">
+									<span id="humidity-dht" class="large-label greater">?</span>
+									<span>&percnt;</span>
+								</td>
+								<td>
+									<table>
+										<tr>
+											<td>
+												<span id="humidity-dht-min">?</span>
+												<span>&percnt;</span>
+											</td>
+											<td>
+												<span id="humidity-dht-avg">?</span>
+												<span>&percnt;</span>
+											</td>
+											<td>
+												<span id="humidity-dht-max">?</span>
+												<span>&percnt;</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="4">
+									<div>BME680</div>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-thermometer-half fa-3x thermometer-color" aria-hidden="true"></i>
+								</td>
+								<td colspan="2">
+									<span id="temperature-bme" class="large-label greater">?</span>
+									<span>&deg;C</span>
+								</td>
+								<td>
+									<table>
+										<tr>
+											<td>
+												<span id="temperature-bme-min">?</span>
+												<span>&deg;c</span>
+											</td>
+											<td>
+												<span id="temperature-bme-avg">?</span>
+												<span>&deg;c</span>
+											</td>
+											<td>
+												<span id="temperature-bme-max">?</span>
+												<span>&deg;c</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-tint fa-3x humidity-color"></i>
+								</td>
+								<td colspan="2">
+									<span id="humidity-bme" class="large-label greater">?</span>
+									<span>&percnt;</span>
+								</td>
+								<td>
+									<table>
+										<tr>
+											<td>
+												<span id="humidity-bme-min">?</span>
+												<span>&percnt;</span>
+											</td>
+											<td>
+												<span id="humidity-bme-avg">?</span>
+												<span>&percnt;</span>
+											</td>
+											<td>
+												<span id="humidity-bme-max">?</span>
+												<span>&percnt;</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-gauge fa-3x humidity-color barometer-color"></i>
+								</td>
+								<td colspan="2">
+									<span id="pressure-bme" class="large-label greater">?</span>
+									<span>hPa</span>
+								</td>
+								<td>
+									<table>
+										<tr>
+											<td>
+												<span id="pressure-bme-min">?</span>
+												<span>hPa</span>
+											</td>
+											<td>
+												<span id="pressure-bme-avg">?</span>
+												<span>hPa</span>
+											</td>
+											<td>
+												<span id="pressure-bme-max">?</span>
+												<span>hPa</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
 						</table>
+					</center>
+				</form>
+			</div>
+
+			<div class="page two">
+				<form id="hidden-upper-form">
+					<center>
 						<div>
 							<canvas id="lineChartDhtTemperature" class="chartjs-render-monitor"></canvas>
 						</div>
@@ -166,148 +324,22 @@
 				</form>
 				<form id="hidden-lower-form">
 					<center>
-						<table id="humidity-info">
-							<tr>
-								<td>
-									<i class="fas fa-tint fa-3x"></i>
-								</td>
-								<td>
-									<span class="dht-labels">Humidity</span>
-								</td>
-								<td>
-									<span id="humidity" class="dht-labels greater">?</span>
-									<span>&percnt;</span>
-								</td>
-								<td>
-									<table id="humidity-stats">
-										<tr>
-											<td>avg.</td>
-											<td>
-												<span id="humidity-avg">?</span>
-												<span>&percnt;</span>
-											</td>
-										</tr>
-										<tr>
-											<td>max</td>
-											<td>
-												<span id="humidity-max">?</span>
-												<span>&percnt;</span>
-											</td>
-										</tr>
-										<tr>
-											<td>min</td>
-											<td>
-												<span id="humidity-min">?</span>
-												<span>&percnt;</span>
-											</td>
-										</tr>
-									</table>
-								</td>
-							</tr>
-						</table>
 						<div>
 							<canvas id="lineChartDhtHumidity" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
 				</form>
-			</div>
-
-			<div class="page two">
 				<form>
 					<center>
-						<table id="batteryVoltage-info">
-							<tr>
-								<td>
-									<i class="fas fa-battery-half fa-3x fa-rotate-270" aria-hidden="true"></i>
-								</td>
-								<td>
-									<span class="dht-labels">Battery Voltage</span>
-								</td>
-								<td>
-									<span id="batteryVoltage" class="dht-labels greater">?</span>
-									<span>V</span>
-								</td>
-								<td>
-									<table id="batteryVoltage-stats">
-										<tr>
-											<td>avg.</td>
-											<td>
-												<span id="batteryVoltage-avg">?</span>
-												<span>V</span>
-											</td>
-										</tr>
-										<tr>
-											<td>max</td>
-											<td>
-												<span id="batteryVoltage-max">?</span>
-												<span>V</span>
-											</td>
-										</tr>
-										<tr>
-											<td>min</td>
-											<td>
-												<span id="batteryVoltage-min">?</span>
-												<span>V</span>
-											</td>
-										</tr>
-									</table>
-								</td>
-							</tr>
-						</table>
 						<div>
-							<canvas id="lineChartBatteryVoltage" class="chartjs-render-monitor"></canvas>
+							<canvas id="lineChartBmePressure" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
 				</form>
 				<form>
 					<center>
-						<table id="esp32Temperature-info">
-							<tr>
-								<td>
-									<i class="fas fa-thermometer-half fa-3x" aria-hidden="true"></i>
-								</td>
-								<td>
-									<span class="dht-labels">ESP32</span>
-								</td>
-								<td>
-									<span id="esp32Temperature" class="dht-labels greater">?</span>
-									<span>&deg;C</span>
-								</td>
-								<td>
-									<table id="esp32Temperature-stats">
-										<tr>
-											<td><span style="font-size:3vh">&#8796;</span></td>
-											<td colspan="2" style="font-size: 15px;">
-												<div>DHT22-T</div>
-											</td>
-										</tr>
-										<tr>
-											<td>avg.</td>
-											<td>
-												<span id="esp32Temperature-avg">?</span>
-												<span>&deg;c</span>
-											</td>
-										</tr>
-										<tr>
-											<td>max</td>
-											<td>
-												<span id="esp32Temperature-max">?</span>
-												<span>&deg;c</span>
-											</td>
-										</tr>
-										<tr>
-											<td>min</td>
-											<td>
-												<span id="esp32Temperature-min">?</span>
-												<span>&deg;c</span>
-											</td>
-										</tr>
-									</table>
-								</td>
-							</tr>
-						</table>
 						<div>
-							<canvas id="lineChartEsp32Temperature" class="chartjs-render-monitor"></canvas>
+							<canvas id="lineChartBatteryVoltage" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
 				</form>
@@ -319,6 +351,10 @@
 </body>
 
 </html>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/all.js"
+	integrity="sha512-5FvlLK9/1zFkolsL3agoJESBOWEd1gEzY1/Ul5Qw9cTMiPf/tiZoFD10DB9rQLK/rBBUfXECkG6ZaV7RXkcWNw=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- external scripts shall be put at the end of HTML (helps to responsivness of the page) -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>

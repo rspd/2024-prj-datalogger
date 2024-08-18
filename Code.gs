@@ -98,7 +98,7 @@ function getSensorValuesFromGoogleSheet() {
 	var ws = ss.getSheetByName("Sheet1");
 	var getLastRow = ws.getLastRow();
 
-	return ws.getRange(2, 1, getLastRow - 1, 7).getValues();
+	return ws.getRange(2, 1, getLastRow - 1, 10).getValues();
 }
 
 /**
