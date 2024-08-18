@@ -10,14 +10,14 @@
 
 		var measurementTimeStamps = [];
 		var lineChartLabels = [];
-		var lineChartTemperatureValues = [];
-		var lineChartHeatIndexValues = [];
-		var lineChartHumidityValues = [];
+		var lineChartDhtTemperatureValues = [];
+		var lineChartDhtHeatIndexValues = [];
+		var lineChartDhtHumidityValues = [];
 		var lineChartBatteryVoltageValues = [];
 		var lineChartEsp32TemperatureValues = [];
-		var lineChartEsp32DeltaTemperatureValues = [];
+		var lineChartEsp32DhtDeltaTemperatureValues = [];
 
-		var chartColors = ['#059e8a', '#00add6', '#e69500', '#98fb98'];
+		var chartColors = ['#038674', '#00A0D6', '#e69500', '#98fb98'];
 
 		//let shouldSkip = false;
 		ar.forEach(function (item, index) {
@@ -35,24 +35,24 @@
 			measurementTimeStamps.push(+item[0]);
 			let myDate = formattedDateTime(new Date(item[0] * 1000));
 			lineChartLabels.push(myDate); // or lineChartLabels.push(myDate.toGMTString());
-			lineChartTemperatureValues.push((+item[1] / 100).toFixed(1));
-			lineChartHeatIndexValues.push((+item[6] / 100).toFixed(1));
-			lineChartHumidityValues.push((+item[2] / 100).toFixed(1));
+			lineChartDhtTemperatureValues.push((+item[1] / 100).toFixed(1));
+			lineChartDhtHeatIndexValues.push((+item[6] / 100).toFixed(1));
+			lineChartDhtHumidityValues.push((+item[2] / 100).toFixed(1));
 			lineChartBatteryVoltageValues.push((+item[3] / 1000).toFixed(3));
 			lineChartEsp32TemperatureValues.push((+item[4] / 100).toFixed(1));
 			var deltaTemperature = (((+item[4]).toFixed(1) - (+item[1]).toFixed(1)) / 100).toFixed(1);
-			lineChartEsp32DeltaTemperatureValues.push(deltaTemperature);
+			lineChartEsp32DhtDeltaTemperatureValues.push(deltaTemperature);
 		});
 
 		// just for debug purposes
-		//console.log("lineChartTemperatureValues= " + lineChartTemperatureValues)
+		//console.log("lineChartDhtTemperatureValues= " + lineChartDhtTemperatureValues)
 
 		// the line chart data
-		var lineChartTemperatureData = {
+		var lineChartDhtTemperatureData = {
 			labels: lineChartLabels,
 			datasets: [{
 				label: 'DHT22-T',
-				data: lineChartTemperatureValues,
+				data: lineChartDhtTemperatureValues,
 				fill: false,
 				borderColor: chartColors[0],
 				tension: 0.1,
@@ -60,7 +60,7 @@
 			},
 			{
 				label: 'DHT22-HI',
-				data: lineChartHeatIndexValues,
+				data: lineChartDhtHeatIndexValues,
 				fill: false,
 				borderColor: chartColors[3],
 				tension: 0.1,
@@ -111,12 +111,12 @@
 		};
 
 		// grab the line chart context
-		var ctx = document.getElementById("lineChartTemperature").getContext("2d");
+		var ctx = document.getElementById("lineChartDhtTemperature").getContext("2d");
 
 		// render/show/create the line chart to be shown now
-		var lineChartTemperature = new Chart(ctx, {
+		var lineChartDhtTemperature = new Chart(ctx, {
 			type: 'line',
-			data: lineChartTemperatureData,
+			data: lineChartDhtTemperatureData,
 			options: chartOptions,
 		});
 
@@ -163,11 +163,11 @@
 		};
 
 		// the line chart data
-		var lineChartHumidityData = {
+		var lineChartDhtHumidityData = {
 			labels: lineChartLabels,
 			datasets: [{
 				label: 'Humidity',
-				data: lineChartHumidityValues,
+				data: lineChartDhtHumidityValues,
 				fill: false,
 				borderColor: chartColors[1],
 				tension: 0.1,
@@ -176,12 +176,12 @@
 		};
 
 		// grab the line chart context
-		ctx = document.getElementById("lineChartHumidity").getContext("2d");
+		ctx = document.getElementById("lineChartDhtHumidity").getContext("2d");
 
 		// render/show/create the line chart to be shown now
 		var lineChartHumidity = new Chart(ctx, {
 			type: 'line',
-			data: lineChartHumidityData,
+			data: lineChartDhtHumidityData,
 			options: chartOptionsNoLegend,
 		});
 
@@ -241,7 +241,7 @@
 		});
 
 		// the line chart data
-		var lineChartEsp32DeltaTemperatureData = {
+		var lineChartEsp32TemperatureData = {
 			labels: lineChartLabels,
 			datasets: [{
 				label: 'Temperature',
@@ -259,7 +259,7 @@
 		// render/show/create the line chart to be shown now
 		var lineChartEsp32Temperature = new Chart(ctx, {
 			type: 'line',
-			data: lineChartEsp32DeltaTemperatureData,
+			data: lineChartEsp32TemperatureData,
 			options: chartOptionsNoLegend,
 		});
 
@@ -269,26 +269,26 @@
 		let secondsSinceMeasStart = (lastMeasTime.getTime() - firstMeasTime.getTime()) / 1000;
 		document.getElementById("info").innerText = "Total of " + nrOfSamples + " measurements in " + msToTime(secondsSinceMeasStart * 1000);
 
-		document.getElementById("temperature").innerText = lineChartTemperatureValues[lineChartTemperatureValues.length - 1];
-		document.getElementById("humidity").innerText = lineChartHumidityValues[lineChartHumidityValues.length - 1];
+		document.getElementById("temperature").innerText = lineChartDhtTemperatureValues[lineChartDhtTemperatureValues.length - 1];
+		document.getElementById("humidity").innerText = lineChartDhtHumidityValues[lineChartDhtHumidityValues.length - 1];
 		document.getElementById("batteryVoltage").innerText = lineChartBatteryVoltageValues[lineChartBatteryVoltageValues.length - 1];
 		document.getElementById("esp32Temperature").innerText = lineChartEsp32TemperatureValues[lineChartEsp32TemperatureValues.length - 1];
 
 		var startTime = performance.now()
-		var arr = maxMinAvg(lineChartEsp32DeltaTemperatureValues);
+		var arr = maxMinAvg(lineChartEsp32DhtDeltaTemperatureValues);
 		document.getElementById("esp32Temperature-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("esp32Temperature-max").innerText = lineChartEsp32DeltaTemperatureValues[arr[0]];
-		document.getElementById("esp32Temperature-min").innerText = lineChartEsp32DeltaTemperatureValues[arr[1]];
+		document.getElementById("esp32Temperature-max").innerText = lineChartEsp32DhtDeltaTemperatureValues[arr[0]];
+		document.getElementById("esp32Temperature-min").innerText = lineChartEsp32DhtDeltaTemperatureValues[arr[1]];
 
-		arr = maxMinAvg(lineChartTemperatureValues);
+		arr = maxMinAvg(lineChartDhtTemperatureValues);
 		document.getElementById("temperature-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("temperature-max").innerText = lineChartTemperatureValues[arr[0]];
-		document.getElementById("temperature-min").innerText = lineChartTemperatureValues[arr[1]];
+		document.getElementById("temperature-max").innerText = lineChartDhtTemperatureValues[arr[0]];
+		document.getElementById("temperature-min").innerText = lineChartDhtTemperatureValues[arr[1]];
 
-		arr = maxMinAvg(lineChartHumidityValues);
+		arr = maxMinAvg(lineChartDhtHumidityValues);
 		document.getElementById("humidity-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("humidity-max").innerText = lineChartHumidityValues[arr[0]];
-		document.getElementById("humidity-min").innerText = lineChartHumidityValues[arr[1]];
+		document.getElementById("humidity-max").innerText = lineChartDhtHumidityValues[arr[0]];
+		document.getElementById("humidity-min").innerText = lineChartDhtHumidityValues[arr[1]];
 
 		arr = maxMinAvg(lineChartBatteryVoltageValues);
 		document.getElementById("batteryVoltage-avg").innerText = arr[2].toFixed(3);
