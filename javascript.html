@@ -19,6 +19,7 @@
 		var lineChartBmeTemperatureValues = [];
 		var lineChartBmeHumidityValues = [];
 		var lineChartBmePressureValues = [];
+		var lineChartBmeGasResistanceValues = [];
 
 		var chartColors = ['#32CD32', '#00A0D6', '#e69500', '#98fb98'];
 
@@ -46,6 +47,7 @@
 			lineChartBmeTemperatureValues.push((+item[7] / 100).toFixed(1));
 			lineChartBmeHumidityValues.push((+item[8] / 100).toFixed(1));
 			lineChartBmePressureValues.push((+item[9]).toFixed(1));
+			lineChartBmeGasResistanceValues.push((+item[10]).toFixed(1));
 			var deltaTemperature = (((+item[4]).toFixed(1) - (+item[1]).toFixed(1)) / 100).toFixed(1);
 			lineChartEsp32DhtDeltaTemperatureValues.push(deltaTemperature);
 		});
@@ -87,11 +89,12 @@
 				borderColor: chartColors[3],
 				tension: 0.1,
 				showLine: true,
-			}
-
-			],
+			}],
 		};
 
+
+		// TODO: simplify with updated options
+		// https://www.chartjs.org/docs/latest/developers/updates.html#updating-options
 		var chartOptionsTemperature = {
 			plugins: {
 				title: {
@@ -205,7 +208,7 @@
 		var lineChartDhtHumidityData = {
 			labels: lineChartLabels,
 			datasets: [{
-				label: 'DHT',
+				label: 'DHT22',
 				data: lineChartDhtHumidityValues,
 				fill: false,
 				borderColor: chartColors[1],
@@ -308,7 +311,7 @@
 				label: 'BME680',
 				data: lineChartBmePressureValues,
 				fill: false,
-				borderColor: chartColors[0],
+				borderColor: "#b85c9f",
 				tension: 0.1,
 				showLine: true,
 			}],
@@ -368,6 +371,73 @@
 			options: chartOptionsAmbientPressure,
 		});
 
+		// the line chart data
+		var lineChartBmeGasResistanceData = {
+			labels: lineChartLabels,
+			datasets: [{
+				label: 'BME680',
+				data: lineChartBmeGasResistanceValues,
+				fill: false,
+				borderColor: "#D3D3D3",
+				tension: 0.1,
+				showLine: true,
+			}],
+		};
+
+		var chartOptionsGasResistance = {
+			plugins: {
+				title: {
+					display: true,
+					text: 'Gas Resistance',
+					font: {
+						size: 24
+					},
+				},
+				legend: {
+					display: false
+				},
+				zoom: {
+					zoom: {
+						wheel: {
+							enabled: true,
+						},
+						pinch: {
+							enabled: true
+						},
+						mode: 'x',
+					}
+				},
+			},
+			scales: {
+				x: {
+					ticks: {
+						display: true
+					},
+					display: false
+				},
+				y: {
+					beginAtZero: false,
+					display: true,
+					ticks: {
+						// Include a 'kOhm' sign at the end of every value
+						callback: function (value, index, ticks) {
+							return value + ' kOhm';
+						}
+					}
+				}
+			}
+		};
+
+		// grab the line chart context
+		ctx = document.getElementById("lineChartBmeGasResistance").getContext("2d");
+
+		// render/show/create the line chart to be shown now
+		var lineChartBmeGasResistance = new Chart(ctx, {
+			type: 'line',
+			data: lineChartBmeGasResistanceData,
+			options: chartOptionsGasResistance,
+		});
+
 		let nrOfSamples = lineChartLabels.length;
 		let firstMeasTime = new Date(measurementTimeStamps[0] * 1000);
 		let lastMeasTime = new Date(measurementTimeStamps[measurementTimeStamps.length - 1] * 1000);
@@ -379,6 +449,7 @@
 		document.getElementById("temperature-bme").innerText = lineChartBmeTemperatureValues[lineChartBmeTemperatureValues.length - 1];
 		document.getElementById("humidity-bme").innerText = lineChartBmeHumidityValues[lineChartBmeHumidityValues.length - 1];
 		document.getElementById("pressure-bme").innerText = lineChartBmePressureValues[lineChartBmePressureValues.length - 1];
+		document.getElementById("gasresistance-bme").innerText = lineChartBmeGasResistanceValues[lineChartBmeGasResistanceValues.length - 1];
 		document.getElementById("batteryVoltage").innerText = lineChartBatteryVoltageValues[lineChartBatteryVoltageValues.length - 1];
 		document.getElementById("esp32Temperature").innerText = lineChartEsp32TemperatureValues[lineChartEsp32TemperatureValues.length - 1];
 
@@ -398,7 +469,7 @@
 		document.getElementById("humidity-dht-max").innerText = lineChartDhtHumidityValues[arr[0]];
 		document.getElementById("humidity-dht-min").innerText = lineChartDhtHumidityValues[arr[1]];
 
-		var arr = maxMinAvg(lineChartBmeTemperatureValues);
+		arr = maxMinAvg(lineChartBmeTemperatureValues);
 		document.getElementById("temperature-bme-avg").innerText = arr[2].toFixed(1);
 		document.getElementById("temperature-bme-max").innerText = lineChartBmeTemperatureValues[arr[0]];
 		document.getElementById("temperature-bme-min").innerText = lineChartBmeTemperatureValues[arr[1]];
@@ -408,10 +479,15 @@
 		document.getElementById("humidity-bme-max").innerText = lineChartBmeHumidityValues[arr[0]];
 		document.getElementById("humidity-bme-min").innerText = lineChartBmeHumidityValues[arr[1]];
 
-		var arr = maxMinAvg(lineChartBmePressureValues);
+		arr = maxMinAvg(lineChartBmePressureValues);
 		document.getElementById("pressure-bme-avg").innerText = arr[2].toFixed(1);
 		document.getElementById("pressure-bme-max").innerText = lineChartBmePressureValues[arr[0]];
 		document.getElementById("pressure-bme-min").innerText = lineChartBmePressureValues[arr[1]];
+
+		arr = maxMinAvg(lineChartBmeGasResistanceValues);
+		document.getElementById("gasresistance-bme-avg").innerText = arr[2].toFixed(1);
+		document.getElementById("gasresistance-bme-max").innerText = lineChartBmeGasResistanceValues[arr[0]];
+		document.getElementById("gasresistance-bme-min").innerText = lineChartBmeGasResistanceValues[arr[1]];
 
 		arr = maxMinAvg(lineChartBatteryVoltageValues);
 		document.getElementById("batteryVoltage-avg").innerText = arr[2].toFixed(1);
@@ -429,7 +505,7 @@
 
 		const dateStartMeas = document.querySelectorAll('.date-start-measurement');
 		dateStartMeas.forEach(elem => {
-			elem.innerHTML = "since " + lineChartLabels[0];
+			elem.innerHTML = lineChartLabels[0];
 		});
 
 		const dateLastMeas = document.querySelectorAll(".date-last-measurement");
@@ -438,9 +514,8 @@
 		});
 
 		// clear user feedback
-		document.getElementById("hidden-header-form").style.display = "block";
-		document.getElementById("hidden-upper-form").style.display = "block";
-		document.getElementById("hidden-lower-form").style.display = "block";
+		document.getElementById("hidden-page-one").style.display = "block";
+		document.getElementById("hidden-page-two").style.display = "block";
 		document.getElementById("feedback").style.display = "none";
 		document.getElementById("loader").style.display = "none";
 		document.getElementById("esp32WorkTime-info").style.display = "block";

@@ -20,6 +20,9 @@
  * - https://github.com/mobizt/ESP-Google-Sheet-Client
  * How to show decimals with 0 in chartJS
  * - https://stackoverflow.com/questions/75864092/how-to-show-decimals-with-0-in-chartjs
+ * Updating Options
+ * - https://www.chartjs.org/docs/latest/developers/updates.html#updating-options
+ *
  *
  * Development URL
  * - https://script.google.com/macros/s/AKfycbz7K-RbqsqssCXGNbSldVfRJzzNM4AyqQZ-RvBWp0Y/dev?page=DataLogger
@@ -98,7 +101,7 @@ function getSensorValuesFromGoogleSheet() {
 	var ws = ss.getSheetByName("Sheet1");
 	var getLastRow = ws.getLastRow();
 
-	return ws.getRange(2, 1, getLastRow - 1, 10).getValues();
+	return ws.getRange(2, 1, getLastRow - 1, 11).getValues();
 }
 
 /**

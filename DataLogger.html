@@ -28,8 +28,8 @@
 
 	<div class="container">
 		<div class="pages">
-			<div class="page one">
-				<form id="hidden-header-form">
+			<div id="hidden-page-one" class="page one">
+				<form>
 					<center>
 						<table id="esp32WorkTime-info">
 							<tr>
@@ -38,10 +38,13 @@
 								</td>
 							</tr>
 							<tr>
-								<td colspan="3" class="date-last-measurement">?</td>
+								<td colspan="3">
+									update
+									<div class="date-last-measurement">?</div>
+								</td>
 								<td>
-									<div class="date-start-measurement">?
-									</div>
+									since
+									<div class="date-start-measurement">?</div>
 								</td>
 							</tr>
 							<tr>
@@ -51,7 +54,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-regular fa-moon fa-3x" aria-hidden="true"></i>
+									<i class="fas fa-regular fa-moon fa-2x" aria-hidden="true"></i>
 								</td>
 								<td colspan="2">
 									<span class="large-label" id="esp32SleepTime">?</span>
@@ -85,7 +88,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-regular fa-clock fa-3x clock-color" aria-hidden="true"></i>
+									<i class="fas fa-regular fa-clock fa-2x clock-color" aria-hidden="true"></i>
 								</td>
 								<td colspan="2">
 									<span class="large-label" id="esp32WorkTime">?</span>
@@ -111,7 +114,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fa fa-battery-half fa-3x fa-rotate-270 batteryVoltage-color"
+									<i class="fa fa-battery-half fa-2x fa-rotate-270 batteryVoltage-color"
 										aria-hidden="true"></i>
 								</td>
 								<td colspan="2">
@@ -139,7 +142,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-thermometer-half fa-3x thermometer-color" aria-hidden="true"></i>
+									<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"></i>
 								</td>
 								<td colspan="2">
 									<span id="esp32Temperature" class="large-label greater">?</span>
@@ -171,7 +174,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-thermometer-half fa-3x thermometer-color" aria-hidden="true"></i>
+									<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"></i>
 								</td>
 								<td colspan="2">
 									<span id="temperature-dht" class="large-label greater">?</span>
@@ -198,7 +201,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-tint fa-3x humidity-color"></i>
+									<i class="fas fa-tint fa-2x humidity-color"></i>
 								</td>
 								<td colspan="2">
 									<span id="humidity-dht" class="large-label greater">?</span>
@@ -230,7 +233,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-thermometer-half fa-3x thermometer-color" aria-hidden="true"></i>
+									<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"></i>
 								</td>
 								<td colspan="2">
 									<span id="temperature-bme" class="large-label greater">?</span>
@@ -257,7 +260,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-tint fa-3x humidity-color"></i>
+									<i class="fas fa-tint fa-2x humidity-color"></i>
 								</td>
 								<td colspan="2">
 									<span id="humidity-bme" class="large-label greater">?</span>
@@ -284,7 +287,7 @@
 							</tr>
 							<tr>
 								<td>
-									<i class="fas fa-gauge fa-3x humidity-color barometer-color"></i>
+									<i class="fas fa-gauge fa-2x humidity-color barometer-color"></i>
 								</td>
 								<td colspan="2">
 									<span id="pressure-bme" class="large-label greater">?</span>
@@ -309,20 +312,47 @@
 									</table>
 								</td>
 							</tr>
+							<tr>
+								<td>
+									<i class="fas fa-smog fa-2x humidity-color smog-color"></i>
+								</td>
+								<td colspan="2">
+									<span id="gasresistance-bme" class="large-label greater">?</span>
+									<span>kOhm</span>
+								</td>
+								<td>
+									<table>
+										<tr>
+											<td>
+												<span id="gasresistance-bme-min">?</span>
+												<span>kOhm</span>
+											</td>
+											<td>
+												<span id="gasresistance-bme-avg">?</span>
+												<span>kOhm</span>
+											</td>
+											<td>
+												<span id="gasresistance-bme-max">?</span>
+												<span>kOhm</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
 						</table>
 					</center>
 				</form>
 			</div>
 
-			<div class="page two">
-				<form id="hidden-upper-form">
+			<div id="hidden-page-two" class="page two">
+				<form>
 					<center>
 						<div>
 							<canvas id="lineChartDhtTemperature" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
 				</form>
-				<form id="hidden-lower-form">
+				<form>
 					<center>
 						<div>
 							<canvas id="lineChartDhtHumidity" class="chartjs-render-monitor"></canvas>
@@ -333,6 +363,13 @@
 					<center>
 						<div>
 							<canvas id="lineChartBmePressure" class="chartjs-render-monitor"></canvas>
+						</div>
+					</center>
+				</form>
+				<form>
+					<center>
+						<div>
+							<canvas id="lineChartBmeGasResistance" class="chartjs-render-monitor"></canvas>
 						</div>
 					</center>
 				</form>
