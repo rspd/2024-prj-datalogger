@@ -317,11 +317,11 @@
 			}],
 		};
 
-		var chartOptionsAmbientPressure = {
+		var chartOptionsPressure = {
 			plugins: {
 				title: {
 					display: true,
-					text: 'Ambient Pressure',
+					text: 'Pressure',
 					font: {
 						size: 24
 					},
@@ -368,7 +368,7 @@
 		var lineChartBmePressure = new Chart(ctx, {
 			type: 'line',
 			data: lineChartBmePressureData,
-			options: chartOptionsAmbientPressure,
+			options: chartOptionsPressure,
 		});
 
 		// the line chart data
@@ -438,87 +438,84 @@
 			options: chartOptionsGasResistance,
 		});
 
-		let nrOfSamples = lineChartLabels.length;
+		let nrOfSamples = lineChartLabels.length * 9;
 		let firstMeasTime = new Date(measurementTimeStamps[0] * 1000);
 		let lastMeasTime = new Date(measurementTimeStamps[measurementTimeStamps.length - 1] * 1000);
 		let secondsSinceMeasStart = (lastMeasTime.getTime() - firstMeasTime.getTime()) / 1000;
-		document.getElementById("info").innerText = "Total of " + nrOfSamples + " measurements in " + msToTime(secondsSinceMeasStart * 1000);
 
-		document.getElementById("temperature-dht").innerText = lineChartDhtTemperatureValues[lineChartDhtTemperatureValues.length - 1];
-		document.getElementById("humidity-dht").innerText = lineChartDhtHumidityValues[lineChartDhtHumidityValues.length - 1];
-		document.getElementById("temperature-bme").innerText = lineChartBmeTemperatureValues[lineChartBmeTemperatureValues.length - 1];
-		document.getElementById("humidity-bme").innerText = lineChartBmeHumidityValues[lineChartBmeHumidityValues.length - 1];
-		document.getElementById("pressure-bme").innerText = lineChartBmePressureValues[lineChartBmePressureValues.length - 1];
-		document.getElementById("gasresistance-bme").innerText = lineChartBmeGasResistanceValues[lineChartBmeGasResistanceValues.length - 1];
-		document.getElementById("batteryVoltage").innerText = lineChartBatteryVoltageValues[lineChartBatteryVoltageValues.length - 1];
-		document.getElementById("esp32Temperature").innerText = lineChartEsp32TemperatureValues[lineChartEsp32TemperatureValues.length - 1];
+		let info = 'Last update ' + lineChartLabels[lineChartLabels.length - 1] + '. ' + nrOfSamples + ' measurements since ' + lineChartLabels[0] + ' (' + msToTime(secondsSinceMeasStart * 1000) + ')';
+		document.getElementById("info").textContent = info;
+
+		document.getElementById("temperature-dht").textContent = lineChartDhtTemperatureValues[lineChartDhtTemperatureValues.length - 1];
+		document.getElementById("heatindex-dht").textContent = lineChartDhtHeatIndexValues[lineChartDhtHeatIndexValues.length - 1];
+		document.getElementById("humidity-dht").textContent = lineChartDhtHumidityValues[lineChartDhtHumidityValues.length - 1];
+		document.getElementById("temperature-bme").textContent = lineChartBmeTemperatureValues[lineChartBmeTemperatureValues.length - 1];
+		document.getElementById("humidity-bme").textContent = lineChartBmeHumidityValues[lineChartBmeHumidityValues.length - 1];
+		document.getElementById("pressure-bme").textContent = lineChartBmePressureValues[lineChartBmePressureValues.length - 1];
+		document.getElementById("gasresistance-bme").textContent = lineChartBmeGasResistanceValues[lineChartBmeGasResistanceValues.length - 1];
+		document.getElementById("batteryVoltage").textContent = lineChartBatteryVoltageValues[lineChartBatteryVoltageValues.length - 1];
+		document.getElementById("esp32Temperature").textContent = lineChartEsp32TemperatureValues[lineChartEsp32TemperatureValues.length - 1];
 
 		var startTime = performance.now()
 		var arr = maxMinAvg(lineChartEsp32DhtDeltaTemperatureValues);
-		document.getElementById("esp32Temperature-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("esp32Temperature-max").innerText = lineChartEsp32DhtDeltaTemperatureValues[arr[0]];
-		document.getElementById("esp32Temperature-min").innerText = lineChartEsp32DhtDeltaTemperatureValues[arr[1]];
+		document.getElementById("esp32Temperature-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("esp32Temperature-max").textContent = lineChartEsp32DhtDeltaTemperatureValues[arr[0]];
+		document.getElementById("esp32Temperature-min").textContent = lineChartEsp32DhtDeltaTemperatureValues[arr[1]];
 
 		arr = maxMinAvg(lineChartDhtTemperatureValues);
-		document.getElementById("temperature-dht-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("temperature-dht-max").innerText = lineChartDhtTemperatureValues[arr[0]];
-		document.getElementById("temperature-dht-min").innerText = lineChartDhtTemperatureValues[arr[1]];
+		document.getElementById("temperature-dht-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("temperature-dht-max").textContent = lineChartDhtTemperatureValues[arr[0]];
+		document.getElementById("temperature-dht-min").textContent = lineChartDhtTemperatureValues[arr[1]];
+
+		arr = maxMinAvg(lineChartDhtHeatIndexValues);
+		document.getElementById("heatindex-dht-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("heatindex-dht-max").textContent = lineChartDhtHeatIndexValues[arr[0]];
+		document.getElementById("heatindex-dht-min").textContent = lineChartDhtHeatIndexValues[arr[1]];
 
 		arr = maxMinAvg(lineChartDhtHumidityValues);
-		document.getElementById("humidity-dht-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("humidity-dht-max").innerText = lineChartDhtHumidityValues[arr[0]];
-		document.getElementById("humidity-dht-min").innerText = lineChartDhtHumidityValues[arr[1]];
+		document.getElementById("humidity-dht-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("humidity-dht-max").textContent = lineChartDhtHumidityValues[arr[0]];
+		document.getElementById("humidity-dht-min").textContent = lineChartDhtHumidityValues[arr[1]];
 
 		arr = maxMinAvg(lineChartBmeTemperatureValues);
-		document.getElementById("temperature-bme-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("temperature-bme-max").innerText = lineChartBmeTemperatureValues[arr[0]];
-		document.getElementById("temperature-bme-min").innerText = lineChartBmeTemperatureValues[arr[1]];
+		document.getElementById("temperature-bme-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("temperature-bme-max").textContent = lineChartBmeTemperatureValues[arr[0]];
+		document.getElementById("temperature-bme-min").textContent = lineChartBmeTemperatureValues[arr[1]];
 
 		arr = maxMinAvg(lineChartBmeHumidityValues);
-		document.getElementById("humidity-bme-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("humidity-bme-max").innerText = lineChartBmeHumidityValues[arr[0]];
-		document.getElementById("humidity-bme-min").innerText = lineChartBmeHumidityValues[arr[1]];
+		document.getElementById("humidity-bme-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("humidity-bme-max").textContent = lineChartBmeHumidityValues[arr[0]];
+		document.getElementById("humidity-bme-min").textContent = lineChartBmeHumidityValues[arr[1]];
 
 		arr = maxMinAvg(lineChartBmePressureValues);
-		document.getElementById("pressure-bme-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("pressure-bme-max").innerText = lineChartBmePressureValues[arr[0]];
-		document.getElementById("pressure-bme-min").innerText = lineChartBmePressureValues[arr[1]];
+		document.getElementById("pressure-bme-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("pressure-bme-max").textContent = lineChartBmePressureValues[arr[0]];
+		document.getElementById("pressure-bme-min").textContent = lineChartBmePressureValues[arr[1]];
 
 		arr = maxMinAvg(lineChartBmeGasResistanceValues);
-		document.getElementById("gasresistance-bme-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("gasresistance-bme-max").innerText = lineChartBmeGasResistanceValues[arr[0]];
-		document.getElementById("gasresistance-bme-min").innerText = lineChartBmeGasResistanceValues[arr[1]];
+		document.getElementById("gasresistance-bme-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("gasresistance-bme-max").textContent = lineChartBmeGasResistanceValues[arr[0]];
+		document.getElementById("gasresistance-bme-min").textContent = lineChartBmeGasResistanceValues[arr[1]];
 
 		arr = maxMinAvg(lineChartBatteryVoltageValues);
-		document.getElementById("batteryVoltage-avg").innerText = arr[2].toFixed(1);
-		document.getElementById("batteryVoltage-max").innerText = lineChartBatteryVoltageValues[arr[0]];
-		document.getElementById("batteryVoltage-min").innerText = lineChartBatteryVoltageValues[arr[1]];
+		document.getElementById("batteryVoltage-avg").textContent = arr[2].toFixed(3);
+		document.getElementById("batteryVoltage-max").textContent = lineChartBatteryVoltageValues[arr[0]];
+		document.getElementById("batteryVoltage-min").textContent = lineChartBatteryVoltageValues[arr[1]];
 
 		const sleepTime = arrayTimeStampDelta(measurementTimeStamps);
 		arr = maxMinAvg(sleepTime);
-		document.getElementById("esp32SleepTime-avg").innerText = msToTime(sleepTime[2] * 1000, true);
-		document.getElementById("esp32SleepTime-max").innerText = msToTime(sleepTime[0] * 1000, true);
-		document.getElementById("esp32SleepTime-min").innerText = msToTime(sleepTime[1] * 1000, true);
+		document.getElementById("esp32SleepTime-avg").textContent = msToTime(sleepTime[2] * 1000, true);
+		document.getElementById("esp32SleepTime-max").textContent = msToTime(sleepTime[0] * 1000, true);
+		document.getElementById("esp32SleepTime-min").textContent = msToTime(sleepTime[1] * 1000, true);
 
 		var endTime = performance.now()
 		console.log(`execution took ${endTime - startTime} milliseconds`);
-
-		const dateStartMeas = document.querySelectorAll('.date-start-measurement');
-		dateStartMeas.forEach(elem => {
-			elem.innerHTML = lineChartLabels[0];
-		});
-
-		const dateLastMeas = document.querySelectorAll(".date-last-measurement");
-		dateLastMeas.forEach(elem => {
-			elem.innerHTML = lineChartLabels[lineChartLabels.length - 1];
-		});
 
 		// clear user feedback
 		document.getElementById("hidden-page-one").style.display = "block";
 		document.getElementById("hidden-page-two").style.display = "block";
 		document.getElementById("feedback").style.display = "none";
 		document.getElementById("loader").style.display = "none";
-		document.getElementById("esp32WorkTime-info").style.display = "block";
 		document.getElementById("next").style.visibility = "visible";
 	};
 
@@ -645,7 +642,7 @@
 	 * Execute on server failure
 	 */
 	function onFailure() {
-		document.getElementById('feedback').innerText = "Server not responding, please try later again.";
+		document.getElementById('feedback').textContent = "Server not responding, please try later again.";
 		document.getElementById("loader").style.display = "none";
 		localStorage.setItem("visited", "false");
 	}
@@ -677,22 +674,22 @@
 			/*
 			!!!! averages, min/max values are now calculated by maxMinAvg() !!!
 			TODO: transfer of these values would not be needed, deprecate if not used
-				  document.getElementById("temperature-dht-avg").innerText = parseFloat(item[0]).toFixed(1);
-				  document.getElementById("temperature-dht-max").innerText = parseFloat(item[1]).toFixed(1);
-				  document.getElementById("temperature-dht-min").innerText = parseFloat(item[2]).toFixed(1);
-				  document.getElementById("humidity-dht-avg").innerText = parseFloat(item[3]).toFixed(1);
-				  document.getElementById("humidity-dht-max").innerText = parseFloat(item[4]).toFixed(1);
-				  document.getElementById("humidity-dht-min").innerText = parseFloat(item[5]).toFixed(1);
-				  document.getElementById("batteryVoltage-avg").innerText = parseFloat(item[6]).toFixed(3);
-				  document.getElementById("batteryVoltage-max").innerText = parseFloat(item[7]).toFixed(3);
-				  document.getElementById("batteryVoltage-min").innerText = parseFloat(item[8]).toFixed(3);
+				  document.getElementById("temperature-dht-avg").textContent = parseFloat(item[0]).toFixed(1);
+				  document.getElementById("temperature-dht-max").textContent = parseFloat(item[1]).toFixed(1);
+				  document.getElementById("temperature-dht-min").textContent = parseFloat(item[2]).toFixed(1);
+				  document.getElementById("humidity-dht-avg").textContent = parseFloat(item[3]).toFixed(1);
+				  document.getElementById("humidity-dht-max").textContent = parseFloat(item[4]).toFixed(1);
+				  document.getElementById("humidity-dht-min").textContent = parseFloat(item[5]).toFixed(1);
+				  document.getElementById("batteryVoltage-avg").textContent = parseFloat(item[6]).toFixed(3);
+				  document.getElementById("batteryVoltage-max").textContent = parseFloat(item[7]).toFixed(3);
+				  document.getElementById("batteryVoltage-min").textContent = parseFloat(item[8]).toFixed(3);
 			*/
 
-			document.getElementById("esp32WorkTime").innerText = msToTime(parseInt(item[12]));
-			document.getElementById("esp32WorkTime-avg").innerText = parseInt(item[13]);
-			document.getElementById("esp32WorkTime-max").innerText = parseInt(item[14]);
-			document.getElementById("esp32WorkTime-min").innerText = parseInt(item[15]);
-			document.getElementById("esp32SleepTime").innerText = msToTime(parseInt(item[16]) * 1000);
+			document.getElementById("esp32WorkTime").textContent = msToTime(parseInt(item[12]));
+			document.getElementById("esp32WorkTime-avg").textContent = parseInt(item[13]);
+			document.getElementById("esp32WorkTime-max").textContent = parseInt(item[14]);
+			document.getElementById("esp32WorkTime-min").textContent = parseInt(item[15]);
+			document.getElementById("esp32SleepTime").textContent = msToTime(parseInt(item[16]) * 1000);
 		});
 	}
 

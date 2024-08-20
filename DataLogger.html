@@ -29,23 +29,15 @@
 	<div class="container">
 		<div class="pages">
 			<div id="hidden-page-one" class="page one">
+				<table class="main-table">
+					<tr>
+						<td colspan="4" style="padding-bottom:15px">
+							<div id="info">?</div>
+						</td>
+					</tr>
+				</table>
 				<form>
 					<table class="main-table">
-						<tr>
-							<td colspan="4" style="padding-bottom:15px">
-								<div id="info">?</div>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								update
-								<div class="date-last-measurement">?</div>
-							</td>
-							<td>
-								since
-								<div class="date-start-measurement">?</div>
-							</td>
-						</tr>
 						<tr>
 							<td colspan="4">
 								<div>ESP32</div>
@@ -53,7 +45,7 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-regular fa-moon fa-2x" aria-hidden="true"></i>
+								<i class="fas fa-regular fa-moon fa-2x" aria-hidden="true" title="Sleep Time"></i>
 							</td>
 							<td colspan="2">
 								<span class="large-label" id="esp32SleepTime">?</span>
@@ -87,7 +79,8 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-regular fa-clock fa-2x clock-color" aria-hidden="true"></i>
+								<i class="fas fa-regular fa-clock fa-2x clock-color" aria-hidden="true"
+									title="Operation Time"></i>
 							</td>
 							<td colspan="2">
 								<span class="large-label" id="esp32WorkTime">?</span>
@@ -114,7 +107,7 @@
 						<tr>
 							<td>
 								<i class="fa fa-battery-half fa-2x fa-rotate-270 batteryVoltage-color"
-									aria-hidden="true"></i>
+									aria-hidden="true" title="Battery Voltage"></i>
 							</td>
 							<td colspan="2">
 								<span id="batteryVoltage" class="large-label greater">?</span>
@@ -141,7 +134,8 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"></i>
+								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"
+									title="CPU Temperature"></i>
 							</td>
 							<td colspan="2">
 								<span id="esp32Temperature" class="large-label greater">?</span>
@@ -166,6 +160,10 @@
 								</table>
 							</td>
 						</tr>
+					</table>
+				</form>
+				<form>
+					<table class="main-table">
 						<tr>
 							<td colspan="4">
 								<div>DHT22</div>
@@ -173,7 +171,8 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"></i>
+								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"
+									title="Temperature"></i>
 							</td>
 							<td colspan="2">
 								<span id="temperature-dht" class="large-label greater">?</span>
@@ -200,7 +199,35 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-tint fa-2x humidity-color"></i>
+								<i class="fas fa-brands fa-hotjar fa-2x heatindex-color" title="Heat Index"
+									aria-hidden="true"></i>
+							</td>
+							<td colspan="2">
+								<span id="heatindex-dht" class="large-label greater">?</span>
+								<span>&deg;C</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="heatindex-dht-min">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="heatindex-dht-avg">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="heatindex-dht-max">?</span>
+											<span>&deg;c</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-tint fa-2x humidity-color" title="Humidity"></i>
 							</td>
 							<td colspan="2">
 								<span id="humidity-dht" class="large-label greater">?</span>
@@ -225,6 +252,10 @@
 								</table>
 							</td>
 						</tr>
+					</table>
+				</form>
+				<form>
+					<table class="main-table">
 						<tr>
 							<td colspan="4">
 								<div>BME680</div>
@@ -232,7 +263,8 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"></i>
+								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"
+									title="Temperature"></i>
 							</td>
 							<td colspan="2">
 								<span id="temperature-bme" class="large-label greater">?</span>
@@ -259,7 +291,7 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-tint fa-2x humidity-color"></i>
+								<i class="fas fa-tint fa-2x humidity-color" title="Humidity"></i>
 							</td>
 							<td colspan="2">
 								<span id="humidity-bme" class="large-label greater">?</span>
@@ -286,7 +318,7 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-gauge fa-2x humidity-color barometer-color"></i>
+								<i class="fas fa-gauge fa-2x humidity-color barometer-color" title="Pressure"></i>
 							</td>
 							<td colspan="2">
 								<span id="pressure-bme" class="large-label greater">?</span>
@@ -313,7 +345,7 @@
 						</tr>
 						<tr>
 							<td>
-								<i class="fas fa-smog fa-2x humidity-color smog-color"></i>
+								<i class="fas fa-smog fa-2x humidity-color smog-color" title="Gas Reisistance"></i>
 							</td>
 							<td colspan="2">
 								<span id="gasresistance-bme" class="large-label greater">?</span>
