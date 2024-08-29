@@ -15,7 +15,6 @@
 		var lineChartDhtHumidityValues = [];
 		var lineChartBatteryVoltageValues = [];
 		var lineChartEsp32TemperatureValues = [];
-		var lineChartEsp32DhtDeltaTemperatureValues = [];
 		var lineChartBmeTemperatureValues = [];
 		var lineChartBmeHumidityValues = [];
 		var lineChartBmePressureValues = [];
@@ -48,8 +47,6 @@
 			lineChartBmeHumidityValues.push((+item[8] / 100).toFixed(1));
 			lineChartBmePressureValues.push((+item[9]).toFixed(1));
 			lineChartBmeGasResistanceValues.push((+item[10]).toFixed(1));
-			var deltaTemperature = (((+item[4]).toFixed(1) - (+item[1]).toFixed(1)) / 100).toFixed(1);
-			lineChartEsp32DhtDeltaTemperatureValues.push(deltaTemperature);
 		});
 
 		// just for debug purposes
@@ -457,10 +454,10 @@
 		document.getElementById("esp32Temperature").textContent = lineChartEsp32TemperatureValues[lineChartEsp32TemperatureValues.length - 1];
 
 		var startTime = performance.now()
-		var arr = maxMinAvg(lineChartEsp32DhtDeltaTemperatureValues);
+		var arr = maxMinAvg(lineChartEsp32TemperatureValues);
 		document.getElementById("esp32Temperature-avg").textContent = arr[2].toFixed(1);
-		document.getElementById("esp32Temperature-max").textContent = lineChartEsp32DhtDeltaTemperatureValues[arr[0]];
-		document.getElementById("esp32Temperature-min").textContent = lineChartEsp32DhtDeltaTemperatureValues[arr[1]];
+		document.getElementById("esp32Temperature-max").textContent = lineChartEsp32TemperatureValues[arr[0]];
+		document.getElementById("esp32Temperature-min").textContent = lineChartEsp32TemperatureValues[arr[1]];
 
 		arr = maxMinAvg(lineChartDhtTemperatureValues);
 		document.getElementById("temperature-dht-avg").textContent = arr[2].toFixed(1);
