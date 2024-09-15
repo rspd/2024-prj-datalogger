@@ -1,0 +1,693 @@
+<script>
+	/**
+	 * On success handler
+	 * Creates a line chart in case server executes
+	 * getSensorValues() successfully
+	 */
+	function onSuccess(ar) {
+		// just for debug purposes
+		//console.log(ar);
+
+		var measurementTimeStamps = [];
+		var lineChartLabels = [];
+		var lineChartDhtTemperatureValues = [];
+		var lineChartDhtHeatIndexValues = [];
+		var lineChartDhtHumidityValues = [];
+		var lineChartBatteryVoltageValues = [];
+		var lineChartEsp32TemperatureValues = [];
+		var lineChartBmeTemperatureValues = [];
+		var lineChartBmeHumidityValues = [];
+		var lineChartBmePressureValues = [];
+		var lineChartBmeGasResistanceValues = [];
+
+		var chartColors = ['#32CD32', '#00A0D6', '#e69500', '#98fb98'];
+
+		//let shouldSkip = false;
+		ar.forEach(function (item, index) {
+			/*
+			The code caused a problem when the temperature was set to 0.0
+				  if (shouldSkip) {
+					  return;
+				  }
+				  if ((item[0] == "") || (item[1] == "")) {
+					  shouldSkip = true;
+			  console.log("skipped");
+					  return;
+				  }
+			*/
+			measurementTimeStamps.push(+item[0]);
+			let myDate = formattedDateTime(new Date(item[0] * 1000));
+			lineChartLabels.push(myDate); // or lineChartLabels.push(myDate.toGMTString());
+			lineChartDhtTemperatureValues.push((+item[1] / 100).toFixed(1));
+			lineChartDhtHeatIndexValues.push((+item[6] / 100).toFixed(1));
+			lineChartDhtHumidityValues.push((+item[2] / 100).toFixed(1));
+			lineChartBatteryVoltageValues.push((+item[3] / 1000).toFixed(3));
+			lineChartEsp32TemperatureValues.push((+item[4] / 100).toFixed(1));
+			lineChartBmeTemperatureValues.push((+item[7] / 100).toFixed(1));
+			lineChartBmeHumidityValues.push((+item[8] / 100).toFixed(1));
+			lineChartBmePressureValues.push((+item[9]).toFixed(1));
+			lineChartBmeGasResistanceValues.push((+item[10]).toFixed(1));
+		});
+
+		// just for debug purposes
+		//console.log("lineChartDhtTemperatureValues= " + lineChartDhtTemperatureValues)
+
+		// the line chart data
+		var lineChartDhtTemperatureData = {
+			labels: lineChartLabels,
+			datasets: [{
+				label: 'DHT22',
+				data: lineChartDhtTemperatureValues,
+				fill: false,
+				borderColor: chartColors[0],
+				tension: 0.1,
+				showLine: true,
+			},
+			{
+				label: 'DHT22 heat index',
+				data: lineChartDhtHeatIndexValues,
+				fill: false,
+				borderColor: "#808000",
+				tension: 0.1,
+				showLine: true,
+			},
+			{
+				label: 'BME680',
+				data: lineChartBmeTemperatureValues,
+				fill: false,
+				borderColor: "#20B2AA",
+				tension: 0.1,
+				showLine: true,
+			},
+			{
+				label: 'ESP32',
+				data: lineChartEsp32TemperatureValues,
+				fill: false,
+				borderColor: chartColors[3],
+				tension: 0.1,
+				showLine: true,
+			}],
+		};
+
+
+		// TODO: simplify with updated options
+		// https://www.chartjs.org/docs/latest/developers/updates.html#updating-options
+		var chartOptionsTemperature = {
+			plugins: {
+				title: {
+					display: true,
+					text: 'Temperature',
+					font: {
+						size: 24
+					},
+				},
+				legend: {
+					display: true
+				},
+				zoom: {
+					zoom: {
+						wheel: {
+							enabled: true,
+						},
+						pinch: {
+							enabled: true
+						},
+						mode: 'x',
+					}
+				},
+				/*, // not needed here anymore, toFixed() done directly on JSON response
+				tooltip: {
+				  callbacks: {
+					label: function(context) {
+					  // this guarantees that 1 decimal place is shown -> e.g. '22.0'
+					  return context.parsed.y.toFixed(1);
+					}
+				  }
+				}
+				*/
+			},
+			scales: {
+				x: {
+					ticks: {
+						display: true
+					},
+					display: false
+				},
+				y: {
+					beginAtZero: false,
+					display: true,
+					ticks: {
+						// Include a deg C sign at the end of every value
+						callback: function (value, index, ticks) {
+							return value + ' °C';
+						}
+					}
+				}
+			}
+		};
+
+		// grab the line chart context
+		var ctx = document.getElementById("lineChartDhtTemperature").getContext("2d");
+
+		// render/show/create the line chart to be shown now
+		var lineChartDhtTemperature = new Chart(ctx, {
+			type: 'line',
+			data: lineChartDhtTemperatureData,
+			options: chartOptionsTemperature,
+		});
+
+
+		var chartOptionsHumidity = {
+			plugins: {
+				title: {
+					display: true,
+					text: 'Humidity',
+					font: {
+						size: 24
+					},
+				},
+				legend: {
+					display: true
+				},
+				zoom: {
+					zoom: {
+						wheel: {
+							enabled: true,
+						},
+						pinch: {
+							enabled: true
+						},
+						mode: 'x',
+					}
+				},
+			},
+			scales: {
+				x: {
+					ticks: {
+						display: true
+					},
+					display: false
+				},
+				y: {
+					beginAtZero: false,
+					display: true,
+					ticks: {
+						// Include a percentage sign at the end of every value
+						callback: function (value, index, ticks) {
+							return value + ' %';
+						}
+					}
+				}
+			}
+		};
+
+		// the line chart data
+		var lineChartDhtHumidityData = {
+			labels: lineChartLabels,
+			datasets: [{
+				label: 'DHT22',
+				data: lineChartDhtHumidityValues,
+				fill: false,
+				borderColor: chartColors[1],
+				tension: 0.1,
+				showLine: true,
+			},
+			{
+				label: 'BME680',
+				data: lineChartBmeHumidityValues,
+				fill: false,
+				borderColor: "#20B2AA",
+				tension: 0.1,
+				showLine: true,
+			}
+			],
+		};
+
+		// grab the line chart context
+		ctx = document.getElementById("lineChartDhtHumidity").getContext("2d");
+
+		// render/show/create the line chart to be shown now
+		var lineChartHumidity = new Chart(ctx, {
+			type: 'line',
+			data: lineChartDhtHumidityData,
+			options: chartOptionsHumidity,
+		});
+
+		// the line chart data
+		var lineChartBatteryVoltageData = {
+			labels: lineChartLabels,
+			datasets: [{
+				label: 'Battery Voltage',
+				data: lineChartBatteryVoltageValues,
+				fill: false,
+				borderColor: chartColors[2],
+				tension: 0.1,
+				showLine: true,
+			}],
+		};
+
+		// grab the line chart context
+		ctx = document.getElementById("lineChartBatteryVoltage").getContext("2d");
+
+		var chartOptionsBattVoltage = {
+			plugins: {
+				title: {
+					display: true,
+					text: 'Battery Voltage',
+					font: {
+						size: 24
+					},
+				},
+				legend: {
+					display: false
+				},
+				zoom: {
+					zoom: {
+						wheel: {
+							enabled: true,
+						},
+						pinch: {
+							enabled: true
+						},
+						mode: 'x',
+					}
+				}
+			},
+			scales: {
+				x: {
+					ticks: {
+						display: true
+					},
+					display: false
+				},
+				y: {
+					display: true,
+					//max: 4.30,
+					//min: 2.90,
+					ticks: {
+						// Include a V sign at the end of every value
+						callback: function (value, index, ticks) {
+							return value.toFixed(2) + ' V';
+						}
+					}
+				}
+			}
+		};
+
+		// render/show/create the line chart to be shown now
+		var lineChartBatteryVoltage = new Chart(ctx, {
+			type: 'line',
+			data: lineChartBatteryVoltageData,
+			options: chartOptionsBattVoltage
+		});
+
+		// the line chart data
+		var lineChartBmePressureData = {
+			labels: lineChartLabels,
+			datasets: [{
+				label: 'BME680',
+				data: lineChartBmePressureValues,
+				fill: false,
+				borderColor: "#b85c9f",
+				tension: 0.1,
+				showLine: true,
+			}],
+		};
+
+		var chartOptionsPressure = {
+			plugins: {
+				title: {
+					display: true,
+					text: 'Pressure',
+					font: {
+						size: 24
+					},
+				},
+				legend: {
+					display: false
+				},
+				zoom: {
+					zoom: {
+						wheel: {
+							enabled: true,
+						},
+						pinch: {
+							enabled: true
+						},
+						mode: 'x',
+					}
+				},
+			},
+			scales: {
+				x: {
+					ticks: {
+						display: true
+					},
+					display: false
+				},
+				y: {
+					beginAtZero: false,
+					display: true,
+					ticks: {
+						// Include a hPa sign at the end of every value
+						callback: function (value, index, ticks) {
+							return value + ' hPa';
+						}
+					}
+				}
+			}
+		};
+
+		// grab the line chart context
+		ctx = document.getElementById("lineChartBmePressure").getContext("2d");
+
+		// render/show/create the line chart to be shown now
+		var lineChartBmePressure = new Chart(ctx, {
+			type: 'line',
+			data: lineChartBmePressureData,
+			options: chartOptionsPressure,
+		});
+
+		// the line chart data
+		var lineChartBmeGasResistanceData = {
+			labels: lineChartLabels,
+			datasets: [{
+				label: 'BME680',
+				data: lineChartBmeGasResistanceValues,
+				fill: false,
+				borderColor: "#D3D3D3",
+				tension: 0.1,
+				showLine: true,
+			}],
+		};
+
+		var chartOptionsGasResistance = {
+			plugins: {
+				title: {
+					display: true,
+					text: 'Gas Resistance',
+					font: {
+						size: 24
+					},
+				},
+				legend: {
+					display: false
+				},
+				zoom: {
+					zoom: {
+						wheel: {
+							enabled: true,
+						},
+						pinch: {
+							enabled: true
+						},
+						mode: 'x',
+					}
+				},
+			},
+			scales: {
+				x: {
+					ticks: {
+						display: true
+					},
+					display: false
+				},
+				y: {
+					beginAtZero: false,
+					display: true,
+					ticks: {
+						// Include a 'kOhm' sign at the end of every value
+						callback: function (value, index, ticks) {
+							return value + ' kOhm';
+						}
+					}
+				}
+			}
+		};
+
+		// grab the line chart context
+		ctx = document.getElementById("lineChartBmeGasResistance").getContext("2d");
+
+		// render/show/create the line chart to be shown now
+		var lineChartBmeGasResistance = new Chart(ctx, {
+			type: 'line',
+			data: lineChartBmeGasResistanceData,
+			options: chartOptionsGasResistance,
+		});
+
+		let nrOfSamples = lineChartLabels.length * 9;
+		let firstMeasTime = new Date(measurementTimeStamps[0] * 1000);
+		let lastMeasTime = new Date(measurementTimeStamps[measurementTimeStamps.length - 1] * 1000);
+		let secondsSinceMeasStart = (lastMeasTime.getTime() - firstMeasTime.getTime()) / 1000;
+
+		let info = 'Last update ' + lineChartLabels[lineChartLabels.length - 1] + '. ' + nrOfSamples + ' measurements since ' + lineChartLabels[0] + ' (' + msToTime(secondsSinceMeasStart * 1000) + ')';
+		document.getElementById("info").textContent = info;
+
+		document.getElementById("temperature-dht").textContent = lineChartDhtTemperatureValues[lineChartDhtTemperatureValues.length - 1];
+		document.getElementById("heatindex-dht").textContent = lineChartDhtHeatIndexValues[lineChartDhtHeatIndexValues.length - 1];
+		document.getElementById("humidity-dht").textContent = lineChartDhtHumidityValues[lineChartDhtHumidityValues.length - 1];
+		document.getElementById("temperature-bme").textContent = lineChartBmeTemperatureValues[lineChartBmeTemperatureValues.length - 1];
+		document.getElementById("humidity-bme").textContent = lineChartBmeHumidityValues[lineChartBmeHumidityValues.length - 1];
+		document.getElementById("pressure-bme").textContent = lineChartBmePressureValues[lineChartBmePressureValues.length - 1];
+		document.getElementById("gasresistance-bme").textContent = lineChartBmeGasResistanceValues[lineChartBmeGasResistanceValues.length - 1];
+		document.getElementById("batteryVoltage").textContent = lineChartBatteryVoltageValues[lineChartBatteryVoltageValues.length - 1];
+		document.getElementById("esp32Temperature").textContent = lineChartEsp32TemperatureValues[lineChartEsp32TemperatureValues.length - 1];
+
+		var startTime = performance.now()
+		var arr = maxMinAvg(lineChartEsp32TemperatureValues);
+		document.getElementById("esp32Temperature-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("esp32Temperature-max").textContent = lineChartEsp32TemperatureValues[arr[0]];
+		document.getElementById("esp32Temperature-min").textContent = lineChartEsp32TemperatureValues[arr[1]];
+
+		arr = maxMinAvg(lineChartDhtTemperatureValues);
+		document.getElementById("temperature-dht-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("temperature-dht-max").textContent = lineChartDhtTemperatureValues[arr[0]];
+		document.getElementById("temperature-dht-min").textContent = lineChartDhtTemperatureValues[arr[1]];
+
+		arr = maxMinAvg(lineChartDhtHeatIndexValues);
+		document.getElementById("heatindex-dht-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("heatindex-dht-max").textContent = lineChartDhtHeatIndexValues[arr[0]];
+		document.getElementById("heatindex-dht-min").textContent = lineChartDhtHeatIndexValues[arr[1]];
+
+		arr = maxMinAvg(lineChartDhtHumidityValues);
+		document.getElementById("humidity-dht-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("humidity-dht-max").textContent = lineChartDhtHumidityValues[arr[0]];
+		document.getElementById("humidity-dht-min").textContent = lineChartDhtHumidityValues[arr[1]];
+
+		arr = maxMinAvg(lineChartBmeTemperatureValues);
+		document.getElementById("temperature-bme-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("temperature-bme-max").textContent = lineChartBmeTemperatureValues[arr[0]];
+		document.getElementById("temperature-bme-min").textContent = lineChartBmeTemperatureValues[arr[1]];
+
+		arr = maxMinAvg(lineChartBmeHumidityValues);
+		document.getElementById("humidity-bme-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("humidity-bme-max").textContent = lineChartBmeHumidityValues[arr[0]];
+		document.getElementById("humidity-bme-min").textContent = lineChartBmeHumidityValues[arr[1]];
+
+		arr = maxMinAvg(lineChartBmePressureValues);
+		document.getElementById("pressure-bme-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("pressure-bme-max").textContent = lineChartBmePressureValues[arr[0]];
+		document.getElementById("pressure-bme-min").textContent = lineChartBmePressureValues[arr[1]];
+
+		arr = maxMinAvg(lineChartBmeGasResistanceValues);
+		document.getElementById("gasresistance-bme-avg").textContent = arr[2].toFixed(1);
+		document.getElementById("gasresistance-bme-max").textContent = lineChartBmeGasResistanceValues[arr[0]];
+		document.getElementById("gasresistance-bme-min").textContent = lineChartBmeGasResistanceValues[arr[1]];
+
+		arr = maxMinAvg(lineChartBatteryVoltageValues);
+		document.getElementById("batteryVoltage-avg").textContent = arr[2].toFixed(3);
+		document.getElementById("batteryVoltage-max").textContent = lineChartBatteryVoltageValues[arr[0]];
+		document.getElementById("batteryVoltage-min").textContent = lineChartBatteryVoltageValues[arr[1]];
+
+		const sleepTime = arrayTimeStampDelta(measurementTimeStamps);
+		arr = maxMinAvg(sleepTime);
+		document.getElementById("esp32SleepTime-avg").textContent = msToTime(sleepTime[2] * 1000, true);
+		document.getElementById("esp32SleepTime-max").textContent = msToTime(sleepTime[0] * 1000, true);
+		document.getElementById("esp32SleepTime-min").textContent = msToTime(sleepTime[1] * 1000, true);
+
+		var endTime = performance.now()
+		console.log(`execution took ${endTime - startTime} milliseconds`);
+
+		// clear user feedback
+		document.getElementById("hidden-page-one").style.display = "block";
+		document.getElementById("hidden-page-two").style.display = "block";
+		document.getElementById("feedback").style.display = "none";
+		document.getElementById("loader").style.display = "none";
+		document.getElementById("next").style.visibility = "visible";
+	};
+
+	/**
+	* Formatted date & time (yyyy-mm-dd, hh:mm:ss)
+	*/
+	function formattedDateTime(localDate) {
+		const yyyy = localDate.getFullYear();
+		let mm = localDate.getMonth() + 1; // Months start at 0!
+		let dd = localDate.getDate();
+		if (dd < 10) dd = '0' + dd;
+		if (mm < 10) mm = '0' + mm;
+		const hours = localDate.getHours();
+		let minutes = localDate.getMinutes();
+		if (minutes < 10) minutes = '0' + minutes;
+		let seconds = localDate.getSeconds();
+		if (seconds < 10) seconds = '0' + seconds;
+
+		return yyyy + '-' + mm + '-' + dd + ', ' + hours + ':' + minutes + ':' + seconds;
+	}
+
+	/**
+	* Formatted date (yyyy-mm-dd)
+	*/
+	function formattedDate(localDate) {
+		const yyyy = localDate.getFullYear();
+		let mm = localDate.getMonth() + 1; // Months start at 0!
+		let dd = localDate.getDate();
+		if (dd < 10) dd = '0' + dd;
+		if (mm < 10) mm = '0' + mm;
+
+		return yyyy + '-' + mm + '-' + dd;
+	}
+
+	/**
+	 * Converts milliseconds to (D day(s), HH:MM:SS.s) format
+	 */
+	function msToTime(millis, noLeadingZeroes = false) {
+		if (isNaN(millis)) {
+			return "-"
+		}
+
+		var milliseconds = Math.floor((millis % 1000) / 100),
+			seconds = Math.floor((millis / 1000) % 60),
+			minutes = Math.floor((millis / (1000 * 60)) % 60),
+			hours = Math.floor((millis / (1000 * 60 * 60)) % 24),
+			days = Math.floor(millis / (1000 * 60 * 60 * 24));
+
+		hours = (hours < 10) ? "0" + hours : hours;
+		minutes = (minutes < 10) ? "0" + minutes : minutes;
+		seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+		if (noLeadingZeroes) {
+			if (hours === "00") {
+				return minutes + ":" + seconds;
+			}
+		}
+
+		let hourMinSecs = hours + ":" + minutes + ":" + seconds; // + "." + milliseconds;
+
+		if (days == 0) {
+			return hourMinSecs;
+		}
+
+		if (days == 1) {
+			return days + " day, " + hourMinSecs;
+		}
+
+		return days + " days, " + hourMinSecs;
+	}
+
+	function maxMinAvg(arr) {
+		//console.log(arr[0]);
+		var max = Number.NaN;
+		var min = Number.NaN;
+		var sum = Number.NaN;
+		var indexMax = 0;
+		var indexMin = 0;
+		//console.log(arr.length);
+		//console.log(arr);
+		var firstFound = false;
+		var elementsTotal = 0;
+		for (var i = 0; i < arr.length; i++) {
+			let value = parseFloat(arr[i]);
+			if (isNaN(value)) {
+				continue;
+			}
+			if (!firstFound) {
+				max = parseFloat(arr[i]);
+				min = parseFloat(arr[i]);
+				sum = parseFloat(arr[i]);
+				firstFound = true;
+			}
+
+			//console.log(value);
+			if (value > max) {
+				max = value;
+				indexMax = i;
+			}
+
+			if (value < min) {
+				min = value;
+				indexMin = i;
+			}
+			sum = sum + value;
+			elementsTotal = elementsTotal + 1;
+		}
+		//console.log(max); console.log(min); console.log(sum); console.log(arr.length); console.log(elementsTotal);
+		let avg = sum / elementsTotal;
+		//console.log(avg)
+		return [indexMax, indexMin, avg];
+	}
+
+	const arrayTimeStampDelta = (arr) => {
+		const res = [];
+		for (let i = 0; i < arr.length; i++) {
+			const el = Math.floor((+arr[i + 1]) - (+arr[i]));
+			res[i] = el;
+		};
+		return res;
+	};
+
+	/**
+	 * Execute on server failure
+	 */
+	function onFailure() {
+		document.getElementById('feedback').textContent = "Server not responding, please try later again.";
+		document.getElementById("loader").style.display = "none";
+		localStorage.setItem("visited", "false");
+	}
+
+	/**
+	 * On success handler
+	 * Show statistic values in case server executes
+	 * getStatistics() successfully
+	 */
+	function onSuccessStatistics(ar) {
+		// just for debug purposes
+		//console.log(ar);
+
+		//let shouldSkip = false;
+		ar.forEach(function (item, index) {
+			/*
+			The code caused a problem when the temperature was set to 0.0
+				  if (shouldSkip) {
+					  return;
+				  }
+				  if ((item[0] == "") || (item[1] == "") || (item[2] == "") ||
+					  (item[3] == "") || (item[4] == "") || (item[5] == "")) {
+			  console.log("skipped!");
+					  shouldSkip = true;
+					  return;
+				  }
+			*/
+
+			/*
+			!!!! averages, min/max values are now calculated by maxMinAvg() !!!
+			TODO: transfer of these values would not be needed, deprecate if not used
+				  document.getElementById("temperature-dht-avg").textContent = parseFloat(item[0]).toFixed(1);
+				  document.getElementById("temperature-dht-max").textContent = parseFloat(item[1]).toFixed(1);
+				  document.getElementById("temperature-dht-min").textContent = parseFloat(item[2]).toFixed(1);
+				  document.getElementById("humidity-dht-avg").textContent = parseFloat(item[3]).toFixed(1);
+				  document.getElementById("humidity-dht-max").textContent = parseFloat(item[4]).toFixed(1);
+				  document.getElementById("humidity-dht-min").textContent = parseFloat(item[5]).toFixed(1);
+				  document.getElementById("batteryVoltage-avg").textContent = parseFloat(item[6]).toFixed(3);
+				  document.getElementById("batteryVoltage-max").textContent = parseFloat(item[7]).toFixed(3);
+				  document.getElementById("batteryVoltage-min").textContent = parseFloat(item[8]).toFixed(3);
+			*/
+
+			document.getElementById("esp32WorkTime").textContent = msToTime(parseInt(item[12]));
+			document.getElementById("esp32WorkTime-avg").textContent = parseInt(item[13]);
+			document.getElementById("esp32WorkTime-max").textContent = parseInt(item[14]);
+			document.getElementById("esp32WorkTime-min").textContent = parseInt(item[15]);
+			document.getElementById("esp32SleepTime").textContent = msToTime(parseInt(item[16]) * 1000);
+		});
+	}
+
+</script>

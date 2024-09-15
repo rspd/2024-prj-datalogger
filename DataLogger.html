@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<base target="_top">
+	<!-- include styling file here (css) -->
+	<?!= include('stylesheet'); ?>
+	<!-- include javascript file here -->
+	<?!= include('javascript'); ?>
+</head>
+
+<body>
+
+	<div class="header">
+		<a id="previous" class="previous round" onClick="slide('prev')">&#8249;</a>
+		<h1>ESP32 Datalogger</h1>
+		<a id="next" class="next round" onClick="slide('next')">&#8250;</a>
+		<div id="info-version">2024 - v1.07</div>
+	</div>
+
+	<div id="feedback" style="margin-top: 25vh">
+		<center>
+			<h1>retrieving data ...</h1>
+			<span id="loader"></span>
+		</center>
+	</div>
+
+	<div class="container">
+		<div class="pages">
+			<div id="hidden-page-one" class="page one">
+				<table class="main-table">
+					<tr>
+						<td colspan="4" style="padding-bottom:15px">
+							<div id="info">?</div>
+						</td>
+					</tr>
+				</table>
+				<form>
+					<table class="main-table">
+						<tr>
+							<td colspan="4">
+								<div>ESP32</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-regular fa-moon fa-2x" aria-hidden="true" title="Sleep Time"></i>
+							</td>
+							<td colspan="2">
+								<span class="large-label" id="esp32SleepTime">?</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span>(min)</span>
+										</td>
+										<td>
+											<span>(avg.)</span>
+										</td>
+										<td>
+											<span>(max)</span>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<span id="esp32SleepTime-min">?</span>
+										</td>
+										<td>
+											<span id="esp32SleepTime-avg">?</span>
+										</td>
+										<td>
+											<span id="esp32SleepTime-max">?</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-regular fa-clock fa-2x clock-color" aria-hidden="true"
+									title="Operation Time"></i>
+							</td>
+							<td colspan="2">
+								<span class="large-label" id="esp32WorkTime">?</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td class="stats-info">
+											<span id="esp32WorkTime-min">?</span>
+											<span>ms</span>
+										</td>
+										<td class="stats-info">
+											<span id="esp32WorkTime-avg">?</span>
+											<span>ms</span>
+										</td>
+										<td class="stats-info">
+											<span id="esp32WorkTime-max">?</span>
+											<span>ms</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fa fa-battery-half fa-2x fa-rotate-270 batteryVoltage-color"
+									aria-hidden="true" title="Battery Voltage"></i>
+							</td>
+							<td colspan="2">
+								<span id="batteryVoltage" class="large-label greater">?</span>
+								<span>V</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="batteryVoltage-min">?</span>
+											<span>V</span>
+										</td>
+										<td>
+											<span id="batteryVoltage-avg">?</span>
+											<span>V</span>
+										</td>
+										<td>
+											<span id="batteryVoltage-max">?</span>
+											<span>V</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"
+									title="CPU Temperature"></i>
+							</td>
+							<td colspan="2">
+								<span id="esp32Temperature" class="large-label greater">?</span>
+								<span>&deg;C</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="esp32Temperature-min">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="esp32Temperature-avg">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="esp32Temperature-max">?</span>
+											<span>&deg;c</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</form>
+				<form>
+					<table class="main-table">
+						<tr>
+							<td colspan="4">
+								<div>DHT22</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"
+									title="Temperature"></i>
+							</td>
+							<td colspan="2">
+								<span id="temperature-dht" class="large-label greater">?</span>
+								<span>&deg;C</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="temperature-dht-min">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="temperature-dht-avg">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="temperature-dht-max">?</span>
+											<span>&deg;c</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-brands fa-hotjar fa-2x heatindex-color" title="Heat Index"
+									aria-hidden="true"></i>
+							</td>
+							<td colspan="2">
+								<span id="heatindex-dht" class="large-label greater">?</span>
+								<span>&deg;C</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="heatindex-dht-min">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="heatindex-dht-avg">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="heatindex-dht-max">?</span>
+											<span>&deg;c</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-tint fa-2x humidity-color" title="Humidity"></i>
+							</td>
+							<td colspan="2">
+								<span id="humidity-dht" class="large-label greater">?</span>
+								<span>&percnt;</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="humidity-dht-min">?</span>
+											<span>&percnt;</span>
+										</td>
+										<td>
+											<span id="humidity-dht-avg">?</span>
+											<span>&percnt;</span>
+										</td>
+										<td>
+											<span id="humidity-dht-max">?</span>
+											<span>&percnt;</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</form>
+				<form>
+					<table class="main-table">
+						<tr>
+							<td colspan="4">
+								<div>BME680</div>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-thermometer-half fa-2x thermometer-color" aria-hidden="true"
+									title="Temperature"></i>
+							</td>
+							<td colspan="2">
+								<span id="temperature-bme" class="large-label greater">?</span>
+								<span>&deg;C</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="temperature-bme-min">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="temperature-bme-avg">?</span>
+											<span>&deg;c</span>
+										</td>
+										<td>
+											<span id="temperature-bme-max">?</span>
+											<span>&deg;c</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-tint fa-2x humidity-color" title="Humidity"></i>
+							</td>
+							<td colspan="2">
+								<span id="humidity-bme" class="large-label greater">?</span>
+								<span>&percnt;</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="humidity-bme-min">?</span>
+											<span>&percnt;</span>
+										</td>
+										<td>
+											<span id="humidity-bme-avg">?</span>
+											<span>&percnt;</span>
+										</td>
+										<td>
+											<span id="humidity-bme-max">?</span>
+											<span>&percnt;</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-gauge fa-2x humidity-color barometer-color" title="Pressure"></i>
+							</td>
+							<td colspan="2">
+								<span id="pressure-bme" class="large-label greater">?</span>
+								<span>hPa</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="pressure-bme-min">?</span>
+											<span>hPa</span>
+										</td>
+										<td>
+											<span id="pressure-bme-avg">?</span>
+											<span>hPa</span>
+										</td>
+										<td>
+											<span id="pressure-bme-max">?</span>
+											<span>hPa</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<i class="fas fa-smog fa-2x humidity-color smog-color" title="Gas Reisistance"></i>
+							</td>
+							<td colspan="2">
+								<span id="gasresistance-bme" class="large-label greater">?</span>
+								<span>kOhm</span>
+							</td>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<span id="gasresistance-bme-min">?</span>
+											<span>kOhm</span>
+										</td>
+										<td>
+											<span id="gasresistance-bme-avg">?</span>
+											<span>kOhm</span>
+										</td>
+										<td>
+											<span id="gasresistance-bme-max">?</span>
+											<span>kOhm</span>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</form>
+			</div>
+
+			<div id="hidden-page-two" class="page two">
+				<form>
+					<canvas id="lineChartDhtTemperature" class="chartjs-render-monitor"></canvas>
+				</form>
+				<form>
+					<canvas id="lineChartDhtHumidity" class="chartjs-render-monitor"></canvas>
+				</form>
+				<form>
+					<canvas id="lineChartBmePressure" class="chartjs-render-monitor"></canvas>
+				</form>
+				<form>
+					<canvas id="lineChartBmeGasResistance" class="chartjs-render-monitor"></canvas>
+				</form>
+				<form>
+					<canvas id="lineChartBatteryVoltage" class="chartjs-render-monitor"></canvas>
+				</form>
+			</div>
+		</div>
+	</div>
+	<!-- hidden element to create the Rest page link -->
+	<?var url = getUrl();?><input type="hidden" value="<?= url ?>" id="url" />
+</body>
+
+</html>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/all.js"
+	integrity="sha512-5FvlLK9/1zFkolsL3agoJESBOWEd1gEzY1/Ul5Qw9cTMiPf/tiZoFD10DB9rQLK/rBBUfXECkG6ZaV7RXkcWNw=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- external scripts shall be put at the end of HTML (helps to responsivness of the page) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+	integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"
+	integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"
+	integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ=="
+	crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- not used
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.js" integrity="sha512-Lii3WMtgA0C0qmmkdCpsG0Gjr6M0ajRyQRQSbTF6BsrVh/nhZdHpVZ76iMIPvQwz1eoXC3DmAg9K51qT5/dEVg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.js" integrity="sha512-IOZHspo7CAW8RK/m/1Zm2V0yPh3gJivW2GRGL0BoejvtmxxyDEznc4q4dhWlUvxl5vWcNpJcg9YELGKvZ1u5jw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+-->
+
+<!-- these previous versions work too
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.js" integrity="sha512-b3xr4frvDIeyC3gqR1/iOi6T+m3pLlQyXNuvn5FiRrrKiMUJK3du2QqZbCywH6JxS5EOfW0DY0M6WwdXFbCBLQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.js" integrity="sha512-IOZHspo7CAW8RK/m/1Zm2V0yPh3gJivW2GRGL0BoejvtmxxyDEznc4q4dhWlUvxl5vWcNpJcg9YELGKvZ1u5jw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+-->
+
+<script>
+	/* TODO: why ???
+	setInterval(function() {
+		// ok but it opens another tab
+		var url = document.getElementById("url").value + "?page=DataLogger";
+		console.log(url);
+		window.open(url, "_top");
+	}, 10_000); // in ms
+	*/
+
+	$(document).ready(function () {
+		/// execute script when the page is loaded
+		getStatistics();
+		getSensorValues();
+	});
+
+	/**
+	* Get request for statistics
+	*/
+	function getStatistics() {
+		/**
+		* Request server to get sensor values
+		* Handlers onSucces/onFailure provided
+		*/
+		google.script.run
+			.withSuccessHandler(onSuccessStatistics)
+			.withFailureHandler(onFailure)
+			.getStatisticValuesFromGoogleSheet();
+	}
+
+	/**
+	* Get request for temperatures and humidities
+	*/
+	function getSensorValues() {
+		/**
+		* Request server to get sensor values
+		* Handlers onSucces/onFailure provided
+		*/
+		google.script.run
+			.withSuccessHandler(onSuccess)
+			.withFailureHandler(onFailure)
+			.getSensorValuesFromGoogleSheet();
+	};
+
+	const pages = document.querySelectorAll(".page");
+	const translateAmount = 100;
+	let translate = 0;
+
+
+	slide = (direction) => {
+
+		var next = document.getElementById("next");
+		var prev = document.getElementById("previous");
+		if (next.style.visibility === "hidden") {
+			next.style.visibility = "visible";
+			prev.style.visibility = "hidden";
+		} else {
+			next.style.visibility = "hidden";
+			prev.style.visibility = "visible";
+		}
+
+		direction === "next" ? translate -= translateAmount : translate += translateAmount;
+		pages.forEach(
+			pages => (pages.style.transform = `translateX(${translate}%)`)
+		);
+	}
+
+</script>
